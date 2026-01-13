@@ -1,5 +1,5 @@
 
-import { Tip, TreasureReward, UserReward, DifficultyMode } from './types';
+import { TreasureReward, UserReward, DifficultyMode } from './types';
 
 export const DIFFICULTY_MODES: DifficultyMode[] = [
   {
@@ -57,33 +57,6 @@ export const DIFFICULTY_MODES: DifficultyMode[] = [
     objective: 'Desconexión de la dependencia tecnológica.',
     multiplier: 1.4,
     icon: 'Smartphone'
-  }
-];
-
-export const INITIAL_TIPS: Tip[] = [
-  {
-    id: 1,
-    category: "Motivación",
-    content: "Los primeros 5 minutos son los más difíciles. Supera esos y el resto fluye.",
-    author: "James Clear",
-    length: "short",
-    isFavorite: false
-  },
-  {
-    id: 2,
-    category: "Ciencia",
-    content: "Un hábito se forma por la repetición constante en un contexto similar.",
-    author: "Andrew Huberman",
-    length: "short",
-    isFavorite: false
-  },
-  {
-    id: 3,
-    category: "Psicología",
-    content: "No rompas la cadena. El éxito es el resultado de pequeños esfuerzos diarios.",
-    author: "Jerry Seinfeld",
-    length: "short",
-    isFavorite: false
   }
 ];
 

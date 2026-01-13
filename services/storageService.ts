@@ -1,96 +1,79 @@
 
-import { DailyCheckin, StreakData, RewardSystem, Transaction, Tip, UserSettings, TreasureReward, PastHabit } from '../types';
+import { DailyCheckin, StreakData, RewardSystem, UserSettings, TreasureReward, PastHabit } from '../types';
 
 const KEYS = {
   CHECKINS: 'habit_checkins',
   STREAK: 'habit_streak',
   REWARDS: 'habit_rewards',
-  TIPS: 'habit_tips',
   SETTINGS: 'habit_settings',
   DICE_REWARDS: 'habit_dice_rewards',
   PAST_HABITS: 'habit_past_archive'
 };
 
+/**
+ * SHCE Local Persistance Engine
+ * Exclusively uses localStorage for zero-latency data sync.
+ */
 export const storageService = {
-  saveCheckin: (checkin: DailyCheckin) => {
-    const checkins = storageService.getCheckins();
-    checkins.push(checkin);
-    localStorage.setItem(KEYS.CHECKINS, JSON.stringify(checkins));
+  // Sync structure: converts array/object to JSON string (guardarDatos)
+  saveData: (key: string, data: any) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (error) {
+      console.error(`[Storage Error] Could not save ${key}:`, error);
+    }
   },
 
-  getCheckins: (): DailyCheckin[] => {
-    const data = localStorage.getItem(KEYS.CHECKINS);
-    return data ? JSON.parse(data) : [];
+  // Automatic Loading: retrieves and validates data (cargarDatos)
+  getData: (key: string, defaultValue: any) => {
+    try {
+      const data = localStorage.getItem(key);
+      // Validation: if empty/null, return default (usually empty array [] or object)
+      return data ? JSON.parse(data) : defaultValue;
+    } catch (error) {
+      console.error(`[Storage Error] Could not load ${key}:`, error);
+      return defaultValue;
+    }
   },
 
-  saveStreak: (streak: StreakData) => {
-    localStorage.setItem(KEYS.STREAK, JSON.stringify(streak));
-  },
+  // State-specific helper methods
+  saveCheckins: (checkins: DailyCheckin[]) => storageService.saveData(KEYS.CHECKINS, checkins),
+  getCheckins: (): DailyCheckin[] => storageService.getData(KEYS.CHECKINS, []),
 
-  getStreak: (): StreakData => {
-    const data = localStorage.getItem(KEYS.STREAK);
-    return data ? JSON.parse(data) : { currentStreak: 0, longestStreak: 0, totalCompletions: 0, streakHistory: [] };
-  },
+  saveStreak: (streak: StreakData) => storageService.saveData(KEYS.STREAK, streak),
+  getStreak: (): StreakData => storageService.getData(KEYS.STREAK, { 
+    currentStreak: 0, 
+    longestStreak: 0, 
+    totalCompletions: 0, 
+    streakHistory: [] 
+  }),
 
-  saveRewardSystem: (rewards: RewardSystem) => {
-    localStorage.setItem(KEYS.REWARDS, JSON.stringify(rewards));
-  },
+  saveRewardSystem: (rewards: RewardSystem) => storageService.saveData(KEYS.REWARDS, rewards),
+  getRewardSystem: (): RewardSystem => storageService.getData(KEYS.REWARDS, { 
+    availablePoints: 0, 
+    earnedToday: 0, 
+    rewardsCatalog: [], 
+    purchaseHistory: [],
+    streakProtectors: 0 
+  }),
 
-  getRewardSystem: (): RewardSystem => {
-    const data = localStorage.getItem(KEYS.REWARDS);
-    return data ? JSON.parse(data) : { 
-      availablePoints: 0, 
-      earnedToday: 0, 
-      rewardsCatalog: [], 
-      purchaseHistory: [],
-      streakProtectors: 0 
-    };
-  },
+  saveDiceRewards: (rewards: TreasureReward[]) => storageService.saveData(KEYS.DICE_REWARDS, rewards),
+  getDiceRewards: (): TreasureReward[] => storageService.getData(KEYS.DICE_REWARDS, []),
 
-  saveTips: (tips: Tip[]) => {
-    localStorage.setItem(KEYS.TIPS, JSON.stringify(tips));
-  },
+  saveSettings: (settings: UserSettings) => storageService.saveData(KEYS.SETTINGS, settings),
+  getSettings: (): UserSettings => storageService.getData(KEYS.SETTINGS, { 
+    habitName: '', 
+    isDarkMode: true, 
+    notificationsEnabled: false,
+    showStreak: true,
+    fontSize: 'normal',
+    reminderTime: '08:00',
+    gender: 'male',
+    emergencyHabit: 'Mínimo SOS',
+    twoMinuteHabit: 'Regla 2 Min',
+    completeHabit: 'Hábito Completo'
+  }),
 
-  getTips: (): Tip[] => {
-    const data = localStorage.getItem(KEYS.TIPS);
-    return data ? JSON.parse(data) : [];
-  },
-
-  saveDiceRewards: (rewards: TreasureReward[]) => {
-    localStorage.setItem(KEYS.DICE_REWARDS, JSON.stringify(rewards));
-  },
-
-  getDiceRewards: (): TreasureReward[] => {
-    const data = localStorage.getItem(KEYS.DICE_REWARDS);
-    return data ? JSON.parse(data) : [];
-  },
-
-  saveSettings: (settings: UserSettings) => {
-    localStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings));
-  },
-
-  getSettings: (): UserSettings => {
-    const data = localStorage.getItem(KEYS.SETTINGS);
-    return data ? JSON.parse(data) : { 
-      habitName: '', 
-      isDarkMode: true, 
-      notificationsEnabled: false,
-      showStreak: true,
-      fontSize: 'normal',
-      reminderTime: '08:00',
-      gender: 'male',
-      emergencyHabit: 'Mínimo SOS',
-      twoMinuteHabit: 'Regla 2 Min',
-      completeHabit: 'Hábito Completo'
-    };
-  },
-
-  savePastHabits: (habits: PastHabit[]) => {
-    localStorage.setItem(KEYS.PAST_HABITS, JSON.stringify(habits));
-  },
-
-  getPastHabits: (): PastHabit[] => {
-    const data = localStorage.getItem(KEYS.PAST_HABITS);
-    return data ? JSON.parse(data) : [];
-  }
+  savePastHabits: (habits: PastHabit[]) => storageService.saveData(KEYS.PAST_HABITS, habits),
+  getPastHabits: (): PastHabit[] => storageService.getData(KEYS.PAST_HABITS, [])
 };

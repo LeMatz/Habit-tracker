@@ -39,15 +39,6 @@ export interface UserSettings {
   completeHabit: string;
 }
 
-export interface Tip {
-  id: number;
-  category: string;
-  content: string;
-  author: string;
-  length: 'short' | 'medium' | 'long';
-  isFavorite: boolean;
-}
-
 export interface TreasureReward {
   id: number;
   title: string;

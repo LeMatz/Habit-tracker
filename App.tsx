@@ -5,7 +5,6 @@ import Layout from './components/Layout';
 import Home from './screens/Home';
 import Stats from './screens/Stats';
 import Gamification from './screens/Gamification';
-import Tips from './screens/Tips';
 import Settings from './screens/Settings';
 
 const App: React.FC = () => {
@@ -19,8 +18,6 @@ const App: React.FC = () => {
         return <Stats />;
       case 'rewards':
         return <Gamification />;
-      case 'tips':
-        return <Tips />;
       case 'settings':
         return <Settings />;
       default:

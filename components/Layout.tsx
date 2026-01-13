@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, BarChart2, Gift, Lightbulb, Settings as SettingsIcon } from 'lucide-react';
+import { Home, BarChart2, Gift, Settings as SettingsIcon } from 'lucide-react';
 import { useHabits } from '../context/HabitContext';
 
 interface LayoutProps {
@@ -16,7 +16,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
     { id: 'home', icon: <Home size={22} />, label: 'Hoy' },
     { id: 'stats', icon: <BarChart2 size={22} />, label: 'Stats' },
     { id: 'rewards', icon: <Gift size={22} />, label: 'Bazar' },
-    { id: 'tips', icon: <Lightbulb size={22} />, label: 'Guía' },
     { id: 'settings', icon: <SettingsIcon size={22} />, label: 'Ajustes' },
   ];
 

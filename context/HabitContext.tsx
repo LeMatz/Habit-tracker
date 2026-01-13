@@ -1,14 +1,13 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { DailyCheckin, StreakData, RewardSystem, Tip, HabitButtonType, Transaction, UserSettings, TreasureReward, DifficultyMode, PastHabit } from '../types';
+import { DailyCheckin, StreakData, RewardSystem, HabitButtonType, Transaction, UserSettings, TreasureReward, DifficultyMode, PastHabit } from '../types';
 import { storageService } from '../services/storageService';
-import { INITIAL_TIPS, INITIAL_REWARDS, DICE_REWARDS, DIFFICULTY_MODES } from '../constants';
+import { INITIAL_REWARDS, DICE_REWARDS, DIFFICULTY_MODES } from '../constants';
 
 interface HabitContextType {
   streak: StreakData;
   checkins: DailyCheckin[];
   rewards: RewardSystem;
-  tips: Tip[];
   settings: UserSettings;
   diceRewards: TreasureReward[];
   pastHabits: PastHabit[];
@@ -16,7 +15,6 @@ interface HabitContextType {
   canCheckin: () => boolean;
   hasCheckedInToday: () => boolean;
   redeemReward: (rewardId: string) => boolean;
-  toggleFavoriteTip: (id: number) => void;
   addPoints: (amount: number) => void;
   recordDiceRoll: () => void;
   updateSettings: (newSettings: UserSettings) => void;
@@ -31,61 +29,53 @@ interface HabitContextType {
 const HabitContext = createContext<HabitContextType | undefined>(undefined);
 
 export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [streak, setStreak] = useState<StreakData>(storageService.getStreak());
-  const [checkins, setCheckins] = useState<DailyCheckin[]>(storageService.getCheckins());
+  // --- AUTOMATIC LOADING FROM LOCALSTORAGE ---
+  // Initializes state using the storageService loaders (cargarDatos)
+  const [checkins, setCheckins] = useState<DailyCheckin[]>(() => storageService.getCheckins());
+  const [streak, setStreak] = useState<StreakData>(() => storageService.getStreak());
   const [rewards, setRewards] = useState<RewardSystem>(() => {
     const stored = storageService.getRewardSystem();
-    if (stored.rewardsCatalog.length === 0) {
-      stored.rewardsCatalog = INITIAL_REWARDS;
-    }
-    if (stored.streakProtectors === undefined) {
-      stored.streakProtectors = 0;
-    }
+    if (stored.rewardsCatalog.length === 0) stored.rewardsCatalog = INITIAL_REWARDS;
+    if (stored.streakProtectors === undefined) stored.streakProtectors = 0;
     return stored;
   });
-  const [tips, setTips] = useState<Tip[]>(() => {
-    const stored = storageService.getTips();
-    return stored.length > 0 ? stored : INITIAL_TIPS;
-  });
-  const [settings, setSettings] = useState<UserSettings>(storageService.getSettings());
+  const [settings, setSettings] = useState<UserSettings>(() => storageService.getSettings());
   const [diceRewards, setDiceRewards] = useState<TreasureReward[]>(() => {
     const stored = storageService.getDiceRewards();
     return stored.length > 0 ? stored : DICE_REWARDS;
   });
-  const [pastHabits, setPastHabits] = useState<PastHabit[]>(storageService.getPastHabits());
+  const [pastHabits, setPastHabits] = useState<PastHabit[]>(() => storageService.getPastHabits());
   
   const isResetting = useRef(false);
   const lastNotificationDate = useRef<string | null>(null);
 
+  // --- INSTANT SAVE LOGIC (guardarDatos) ---
+  // These effects fire on every state change, syncing to localStorage instantly.
   useEffect(() => {
-    if (isResetting.current) return;
-    storageService.saveStreak(streak);
+    if (!isResetting.current) storageService.saveCheckins(checkins);
+  }, [checkins]);
+
+  useEffect(() => {
+    if (!isResetting.current) storageService.saveStreak(streak);
   }, [streak]);
 
   useEffect(() => {
-    if (isResetting.current) return;
-    storageService.saveRewardSystem(rewards);
+    if (!isResetting.current) storageService.saveRewardSystem(rewards);
   }, [rewards]);
 
   useEffect(() => {
-    if (isResetting.current) return;
-    storageService.saveTips(tips);
-  }, [tips]);
-
-  useEffect(() => {
-    if (isResetting.current) return;
-    storageService.saveDiceRewards(diceRewards);
+    if (!isResetting.current) storageService.saveDiceRewards(diceRewards);
   }, [diceRewards]);
 
   useEffect(() => {
-    if (isResetting.current) return;
-    storageService.savePastHabits(pastHabits);
+    if (!isResetting.current) storageService.savePastHabits(pastHabits);
   }, [pastHabits]);
 
   useEffect(() => {
     if (isResetting.current) return;
     storageService.saveSettings(settings);
     
+    // UI Adaptation for Netlify environment (browser-level changes)
     if (settings.isDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
@@ -99,6 +89,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [settings]);
 
+  // --- NOTIFICATION SYSTEM ---
   useEffect(() => {
     if (!settings.notificationsEnabled) return;
 
@@ -135,12 +126,10 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       if (navigator.storage && navigator.storage.persist) {
         const isPersisted = await navigator.storage.persist();
-        console.log(`Persistencia de base de datos: ${isPersisted}`);
         return isPersisted;
       }
-      return true; // Assume success if browser doesn't support persist API
+      return true;
     } catch (e) {
-      console.error(e);
       return false;
     }
   };
@@ -155,15 +144,11 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const resetProgress = () => {
     isResetting.current = true;
-    localStorage.removeItem('habit_checkins');
-    localStorage.removeItem('habit_streak');
-    localStorage.removeItem('habit_rewards');
-    localStorage.removeItem('habit_past_archive');
-    window.location.href = window.location.href;
+    localStorage.clear();
+    window.location.reload();
   };
 
   const startNewHabit = () => {
-    // Archive the current habit
     const currentSessionsCount = checkins.length;
     const currentHabitMaxStreak = streak.currentStreak;
 
@@ -176,12 +161,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     setPastHabits(prev => [newPastRecord, ...prev]);
-
-    // Keeps availablePoints, longestStreak, and totalCompletions (Lifetime stats)
-    // Clears active habit data
     setCheckins([]);
-    localStorage.setItem('habit_checkins', JSON.stringify([]));
-    
     setStreak(prev => ({
       ...prev,
       currentStreak: 0,
@@ -211,7 +191,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       timestamp: new Date().toISOString()
     };
 
-    // Calculate streak maintenance
     let newCurrent = 1;
     let protectorsUsed = 0;
 
@@ -234,12 +213,9 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }
 
-    const newCheckins = [...checkins, newCheckin];
-    setCheckins(newCheckins);
-    storageService.saveCheckin(newCheckin);
+    setCheckins(prev => [...prev, newCheckin]);
 
-    let newLongest = Math.max(streak.longestStreak, newCurrent);
-    
+    const newLongest = Math.max(streak.longestStreak, newCurrent);
     setStreak(prev => ({
       currentStreak: newCurrent,
       longestStreak: newLongest,
@@ -247,10 +223,8 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       streakHistory: [...prev.streakHistory, today]
     }));
 
-    // Calculate points with Difficulty Multiplier
     const mode = DIFFICULTY_MODES.find(m => m.id === modeId) || DIFFICULTY_MODES[0];
     let pointsToAdd = Math.round(10 * mode.multiplier);
-    
     if (newCurrent % 7 === 0) pointsToAdd += 15;
 
     setRewards(prev => ({
@@ -295,9 +269,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setRewards(prev => {
       let updatedProtectors = prev.streakProtectors;
-      if (rewardId === '2') {
-        updatedProtectors += 1;
-      }
+      if (rewardId === '2') updatedProtectors += 1;
 
       return {
         ...prev,
@@ -310,10 +282,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return true;
   };
 
-  const toggleFavoriteTip = (id: number) => {
-    setTips(prev => prev.map(t => t.id === id ? { ...t, isFavorite: !t.isFavorite } : t));
-  };
-
   const updateSettings = (newSettings: UserSettings) => {
     setSettings(newSettings);
   };
@@ -324,9 +292,9 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   return (
     <HabitContext.Provider value={{ 
-      streak, checkins, rewards, tips, settings, diceRewards, pastHabits,
+      streak, checkins, rewards, settings, diceRewards, pastHabits,
       addCheckin, canCheckin, hasCheckedInToday, redeemReward, 
-      toggleFavoriteTip, addPoints, recordDiceRoll, updateSettings, updateDiceReward,
+      addPoints, recordDiceRoll, updateSettings, updateDiceReward,
       requestNotificationPermission, requestStoragePermission, sendTestNotification, resetProgress, startNewHabit
     }}>
       {children}
