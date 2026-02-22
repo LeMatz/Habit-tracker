@@ -17,16 +17,16 @@ export const HabitButton: React.FC<HabitButtonProps> = ({ type, onClick, disable
       gradient: 'from-orange-500 to-orange-700',
       shadow: 'shadow-orange-500/20',
       icon: <Zap size={28} />,
-      text: customLabel || 'Mínimo',
-      subtext: 'SOS'
+      text: customLabel || 'EMD',
+      subtext: 'Esfuerzo Mínimo Diario'
     },
     twoMinutes: {
       color: 'bg-indigo-500',
       gradient: 'from-indigo-500 to-indigo-700',
       shadow: 'shadow-indigo-500/20',
       icon: <Clock size={28} />,
-      text: customLabel || '2 Min',
-      subtext: 'Micro'
+      text: customLabel || '2 min',
+      subtext: '2 minutos'
     },
     complete: {
       color: 'bg-cyan-500',
@@ -44,10 +44,10 @@ export const HabitButton: React.FC<HabitButtonProps> = ({ type, onClick, disable
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`flex flex-col items-center space-y-4 group ${disabled ? 'opacity-20 grayscale' : 'hover:-translate-y-2'} transition-all duration-300`}
+      className={`flex flex-col items-center space-y-4 group ${disabled ? 'opacity-20 grayscale' : 'hover:-translate-y-2'} transition-all duration-300 w-full`}
     >
       <div
-        className={`w-24 h-24 rounded-[2rem] flex items-center justify-center text-white relative overflow-hidden transition-all duration-500 ${
+        className={`w-20 h-20 sm:w-24 sm:h-24 rounded-[2rem] flex items-center justify-center text-white relative overflow-hidden transition-all duration-500 ${
           !disabled 
             ? `bg-gradient-to-br ${config.gradient} shadow-2xl ${config.shadow} active:scale-95` 
             : 'bg-slate-800 border border-white/5'
@@ -57,9 +57,11 @@ export const HabitButton: React.FC<HabitButtonProps> = ({ type, onClick, disable
         <div className="absolute -top-4 -right-4 w-12 h-12 bg-white/20 rounded-full blur-xl group-hover:scale-150 transition-transform"></div>
         {config.icon}
       </div>
-      <div className="text-center px-1">
-        <p className="text-[10px] font-black text-white uppercase tracking-tighter line-clamp-2 leading-tight h-5 overflow-hidden">{config.text}</p>
-        <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{config.subtext}</p>
+      <div className="text-center w-full px-0.5">
+        <p className="text-[9px] font-black text-white uppercase tracking-tighter leading-[1.1] min-h-[2.2rem] flex items-center justify-center">
+          {config.text}
+        </p>
+        <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mt-1">{config.subtext}</p>
       </div>
     </button>
   );

@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Home, BarChart2, Gift, Settings as SettingsIcon } from 'lucide-react';
+import { Home, BarChart2, Gift, Settings as SettingsIcon, ClipboardList } from 'lucide-react';
 import { useHabits } from '../context/HabitContext';
 
 interface LayoutProps {
@@ -14,50 +13,58 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
   
   const tabs = [
     { id: 'home', icon: <Home size={22} />, label: 'Hoy' },
+    { id: 'tasks', icon: <ClipboardList size={22} />, label: 'Tareas' },
     { id: 'stats', icon: <BarChart2 size={22} />, label: 'Stats' },
     { id: 'rewards', icon: <Gift size={22} />, label: 'Bazar' },
     { id: 'settings', icon: <SettingsIcon size={22} />, label: 'Ajustes' },
   ];
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-[#020617] overflow-hidden relative border-x border-white/5 transition-all duration-500">
-      <header className="sticky top-0 p-6 bg-[#020617]/80 backdrop-blur-xl border-b border-white/5 flex justify-between items-center z-30">
+    <div className="flex flex-col h-full w-full max-w-md mx-auto bg-slate-50 dark:bg-slate-950 border-x border-slate-200 dark:border-slate-900 relative transition-colors duration-500 overflow-hidden">
+      {/* Header Fijo */}
+      <header className="shrink-0 p-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-b border-slate-200 dark:border-slate-800 flex justify-between items-center z-40 pt-[calc(env(safe-area-inset-top)+1rem)]">
         <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 bg-indigo-500 rounded-xl flex items-center justify-center text-lg shadow-[0_0_20px_rgba(99,102,241,0.4)]">
-            💪
+          <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center p-1.5 shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <span className="text-xl">⚡</span>
           </div>
-          <h1 className="text-xl font-black tracking-tighter text-white">Sistema SHCE</h1>
+          <h1 className="text-xl font-black tracking-tighter text-slate-900 dark:text-white leading-none">Sistema SHCE</h1>
         </div>
-        <div className="flex items-center space-x-2 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl shadow-xl transition-all hover:scale-105 active:scale-95">
+        <div className="flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-2xl">
           <span className="text-xs">🌀</span>
-          <span className="text-sm font-black text-indigo-400">{rewards.availablePoints}</span>
+          <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">{rewards.availablePoints}</span>
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto no-scrollbar pb-32">
-        {children}
+      {/* Área de Contenido con Scroll Nativo */}
+      <main className="native-scroll no-scrollbar z-10">
+        <div className="px-1 py-4 min-h-full pb-32">
+          {children}
+        </div>
       </main>
 
-      <nav className="absolute bottom-6 left-5 right-5 bg-[#0f172a]/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] flex justify-between items-center px-6 py-4 z-30 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex flex-col items-center space-y-1 transition-all duration-300 ${
-              activeTab === tab.id 
-                ? 'text-indigo-400 scale-110' 
-                : 'text-slate-500 hover:text-slate-300'
-            }`}
-          >
-            <div className={`p-2 rounded-2xl transition-all ${activeTab === tab.id ? 'bg-indigo-500/15 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : ''}`}>
-              {tab.icon}
-            </div>
-            <span className={`text-[8px] font-black uppercase tracking-widest transition-opacity ${activeTab === tab.id ? 'opacity-100' : 'opacity-0'}`}>
-              {tab.label}
-            </span>
-          </button>
-        ))}
-      </nav>
+      {/* Navegación Flotante: Versión Midnight Oscura con Bordes Cian */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 z-50 pointer-events-none">
+        <nav className="max-w-[calc(100%-1rem)] mx-auto bg-slate-950 border border-cyan-500/60 rounded-[2.5rem] flex justify-between items-center px-4 py-4 shadow-[0_15px_35px_rgba(0,0,0,0.8)] pointer-events-auto transition-all">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex flex-col items-center space-y-1 transition-all duration-300 ${
+                activeTab === tab.id 
+                  ? 'text-cyan-400 scale-110' 
+                  : 'text-slate-500 hover:text-cyan-500/50'
+              }`}
+            >
+              <div className={`p-2 rounded-2xl transition-all ${activeTab === tab.id ? 'bg-cyan-500/10' : ''}`}>
+                {tab.icon}
+              </div>
+              <span className={`text-[8px] font-black uppercase tracking-widest transition-opacity ${activeTab === tab.id ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
+                {tab.label}
+              </span>
+            </button>
+          ))}
+        </nav>
+      </div>
     </div>
   );
 };

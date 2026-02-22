@@ -1,9 +1,8 @@
-
 export interface StreakData {
   currentStreak: number;
   longestStreak: number;
   totalCompletions: number;
-  streakHistory: string[]; // ISO Dates
+  streakHistory: string[];
 }
 
 export type HabitButtonType = 'emergency' | 'twoMinutes' | 'complete';
@@ -18,18 +17,33 @@ export interface DifficultyMode {
 }
 
 export interface DailyCheckin {
-  date: string; // YYYY-MM-DD
+  date: string;
   buttonType: HabitButtonType;
   difficultyModeId: string;
-  willpowerScore: number; // 1-10
+  willpowerScore: number;
   notes?: string;
   timestamp: string;
+}
+
+export interface DailyTask {
+  id: string;
+  title: string;
+  description: string;
+  neuroBasis: string;
+}
+
+export interface TaskState {
+  currentTaskId: string | null;
+  lastAssignedDate: string | null;
+  isCompleted: boolean;
+  history: string[];
 }
 
 export interface UserSettings {
   habitName: string;
   isDarkMode: boolean;
   notificationsEnabled: boolean;
+  soundsEnabled: boolean;
   showStreak: boolean;
   fontSize: 'normal' | 'large';
   reminderTime: string;
@@ -70,7 +84,7 @@ export interface RewardSystem {
   earnedToday: number;
   rewardsCatalog: UserReward[];
   purchaseHistory: Transaction[];
-  lastDiceRollDate?: string; // YYYY-MM-DD
+  lastDiceRollDate?: string;
   streakProtectors: number;
 }
 
@@ -79,5 +93,19 @@ export interface PastHabit {
   name: string;
   sessions: number;
   maxStreak: number;
+  rankReached: string;
   date: string;
+  willpowerHistory?: { dateLabel: string, willpower: number }[];
+  avgWillpower?: string;
+  checkinsSnapshot?: DailyCheckin[];
 }
+
+export interface Tip {
+  id: number;
+  category: string;
+  content: string;
+  author: string;
+  isFavorite: boolean;
+}
+
+export const VERSION = "3.5.0";

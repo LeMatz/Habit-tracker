@@ -1,5 +1,5 @@
 
-import { DailyCheckin, StreakData, RewardSystem, UserSettings, TreasureReward, PastHabit } from '../types';
+import { DailyCheckin, StreakData, RewardSystem, UserSettings, TreasureReward, PastHabit, TaskState, Tip } from '../types';
 
 const KEYS = {
   CHECKINS: 'habit_checkins',
@@ -7,15 +7,12 @@ const KEYS = {
   REWARDS: 'habit_rewards',
   SETTINGS: 'habit_settings',
   DICE_REWARDS: 'habit_dice_rewards',
-  PAST_HABITS: 'habit_past_archive'
+  PAST_HABITS: 'habit_past_archive',
+  TASK_STATE: 'habit_task_state',
+  TIPS: 'habit_tips'
 };
 
-/**
- * SHCE Local Persistance Engine
- * Exclusively uses localStorage for zero-latency data sync.
- */
 export const storageService = {
-  // Sync structure: converts array/object to JSON string (guardarDatos)
   saveData: (key: string, data: any) => {
     try {
       localStorage.setItem(key, JSON.stringify(data));
@@ -24,11 +21,9 @@ export const storageService = {
     }
   },
 
-  // Automatic Loading: retrieves and validates data (cargarDatos)
   getData: (key: string, defaultValue: any) => {
     try {
       const data = localStorage.getItem(key);
-      // Validation: if empty/null, return default (usually empty array [] or object)
       return data ? JSON.parse(data) : defaultValue;
     } catch (error) {
       console.error(`[Storage Error] Could not load ${key}:`, error);
@@ -36,7 +31,6 @@ export const storageService = {
     }
   },
 
-  // State-specific helper methods
   saveCheckins: (checkins: DailyCheckin[]) => storageService.saveData(KEYS.CHECKINS, checkins),
   getCheckins: (): DailyCheckin[] => storageService.getData(KEYS.CHECKINS, []),
 
@@ -65,15 +59,27 @@ export const storageService = {
     habitName: '', 
     isDarkMode: true, 
     notificationsEnabled: false,
+    soundsEnabled: true,
     showStreak: true,
     fontSize: 'normal',
     reminderTime: '08:00',
     gender: 'male',
-    emergencyHabit: 'Mínimo SOS',
-    twoMinuteHabit: 'Regla 2 Min',
+    emergencyHabit: 'EMD',
+    twoMinuteHabit: '2 minutos',
     completeHabit: 'Hábito Completo'
   }),
 
   savePastHabits: (habits: PastHabit[]) => storageService.saveData(KEYS.PAST_HABITS, habits),
-  getPastHabits: (): PastHabit[] => storageService.getData(KEYS.PAST_HABITS, [])
+  getPastHabits: (): PastHabit[] => storageService.getData(KEYS.PAST_HABITS, []),
+
+  saveTaskState: (state: TaskState) => storageService.saveData(KEYS.TASK_STATE, state),
+  getTaskState: (): TaskState => storageService.getData(KEYS.TASK_STATE, {
+    currentTaskId: null,
+    lastAssignedDate: null,
+    isCompleted: false,
+    history: []
+  }),
+
+  saveTips: (tips: Tip[]) => storageService.saveData(KEYS.TIPS, tips),
+  getTips: (): Tip[] => storageService.getData(KEYS.TIPS, [])
 };
