@@ -55,19 +55,29 @@ export const storageService = {
   getDiceRewards: (): TreasureReward[] => storageService.getData(KEYS.DICE_REWARDS, []),
 
   saveSettings: (settings: UserSettings) => storageService.saveData(KEYS.SETTINGS, settings),
-  getSettings: (): UserSettings => storageService.getData(KEYS.SETTINGS, { 
-    habitName: '', 
-    isDarkMode: true, 
-    notificationsEnabled: false,
-    soundsEnabled: true,
-    showStreak: true,
-    fontSize: 'normal',
-    reminderTime: '08:00',
-    gender: 'male',
-    emergencyHabit: 'EMD',
-    twoMinuteHabit: '2 minutos',
-    completeHabit: 'Hábito Completo'
-  }),
+  getSettings: (): UserSettings => {
+    const defaults: UserSettings = { 
+      habitName: '', 
+      isDarkMode: true, 
+      notificationsEnabled: false,
+      soundsEnabled: true,
+      showStreak: true,
+      fontSize: 'normal',
+      reminderTime: '08:00',
+      gender: 'male',
+      emergencyHabit: 'EMD',
+      twoMinuteHabit: '2 minutos',
+      completeHabit: 'Hábito Completo',
+      habitLoop: {
+        cue: 'Señal',
+        craving: 'Anhelo',
+        response: 'Respuesta',
+        reward: 'Recompensa'
+      }
+    };
+    const stored = storageService.getData(KEYS.SETTINGS, defaults);
+    return { ...defaults, ...stored, habitLoop: { ...defaults.habitLoop, ...(stored.habitLoop || {}) } };
+  },
 
   savePastHabits: (habits: PastHabit[]) => storageService.saveData(KEYS.PAST_HABITS, habits),
   getPastHabits: (): PastHabit[] => storageService.getData(KEYS.PAST_HABITS, []),

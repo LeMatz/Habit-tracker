@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useHabits } from '../context/HabitContext';
 import { HabitButton } from '../components/HabitButtons';
 import WillpowerModal from '../components/WillpowerModal';
+import HabitLoopView from '../components/HabitLoopView';
 import { 
   Flame, 
   Trophy, 
@@ -28,7 +29,7 @@ import { soundService } from '../utils/soundService';
 import { DIFFICULTY_MODES } from '../constants';
 
 const Home: React.FC = () => {
-  const { streak, canCheckin, addCheckin, settings, today, rewards } = useHabits();
+  const { streak, canCheckin, addCheckin, settings, today, rewards, diceRewards } = useHabits();
   const [modalOpen, setModalOpen] = useState(false);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<HabitButtonType | null>(null);
@@ -239,13 +240,22 @@ const Home: React.FC = () => {
         )}
       </div>
 
-      <WillpowerModal 
-        isOpen={modalOpen} 
-        onClose={() => setModalOpen(false)} 
-        onSubmit={handleSubmit} 
-      />
+        <WillpowerModal 
+          isOpen={modalOpen} 
+          onClose={() => setModalOpen(false)} 
+          onSubmit={handleSubmit} 
+        />
 
-      {/* Info Modal: Streak Rules (Scroll Corregido) */}
+        {/* Habit Loop Section */}
+        <section className="bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-[#0f172a] border border-slate-200 dark:border-white/5 py-10 px-3 sm:px-10 rounded-[3rem] sm:rounded-[4rem] shadow-2xl transition-all relative overflow-visible">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-indigo-600 text-white text-[8px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full shadow-lg z-30">
+            Arquitectura del Hábito
+          </div>
+
+          <HabitLoopView loop={settings.habitLoop} />
+        </section>
+
+        {/* Info Modal: Streak Rules (Scroll Corregido) */}
       {infoModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-2xl animate-in fade-in duration-300">
           <div className="bg-slate-950 border border-white/10 rounded-[3.5rem] w-full max-w-sm max-h-[85vh] shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] animate-in zoom-in duration-500 relative flex flex-col overflow-hidden">

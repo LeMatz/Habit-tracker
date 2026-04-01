@@ -20,7 +20,7 @@ interface HabitContextType {
   hasCheckedInToday: () => boolean;
   redeemReward: (rewardId: string) => boolean;
   addPoints: (amount: number) => void;
-  recordDiceRoll: () => void;
+  recordDiceRoll: (result: number) => void;
   updateSettings: (newSettings: UserSettings) => void;
   updateDiceReward: (id: number, title: string, description: string) => void;
   toggleFavoriteTip: (id: number) => void;
@@ -34,26 +34,51 @@ interface HabitContextType {
 
 const HabitContext = createContext<HabitContextType | undefined>(undefined);
 
-// Función de fecha optimizada para GMT-3
+// Función de fecha optimizada para GMT-3 (Argentina)
 const getTodayString = () => {
-  return new Intl.DateTimeFormat('fr-CA', {
-    timeZone: 'America/Argentina/Buenos_Aires',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).format(new Date());
+  try {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const dateStr = formatter.format(now);
+    return dateStr;
+  } catch (e) {
+    // Fallback robusto para Argentina (GMT-3) si Intl falla
+    const now = new Date();
+    const offset = -3; // Argentina es UTC-3
+    // Restamos 3 horas al tiempo UTC para aproximar la fecha de Argentina
+    const argentinaDate = new Date(now.getTime() + (offset * 60 * 60 * 1000));
+    return argentinaDate.toISOString().split('T')[0];
+  }
 };
 
-// Función para obtener la fecha de ayer
+// Función para obtener la fecha de ayer de forma robusta
 const getYesterdayString = (baseDateStr: string) => {
-  const d = new Date(baseDateStr + 'T12:00:00'); // Usar mediodía para evitar problemas de DST
-  d.setDate(d.getDate() - 1);
-  return new Intl.DateTimeFormat('fr-CA', {
-    timeZone: 'America/Argentina/Buenos_Aires',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).format(d);
+  try {
+    const d = new Date(baseDateStr + 'T12:00:00Z'); // Usar UTC para aritmética pura
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().split('T')[0];
+  } catch (e) {
+    // Fallback
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().split('T')[0];
+  }
+};
+
+// Calcular diferencia de días de forma robusta
+const getDiffDays = (date1: string, date2: string) => {
+  try {
+    const d1 = new Date(date1 + 'T12:00:00Z');
+    const d2 = new Date(date2 + 'T12:00:00Z');
+    return Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+  } catch (e) {
+    return 0;
+  }
 };
 
 export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -71,7 +96,17 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return stored.length > 0 ? stored : DICE_REWARDS;
   });
   const [pastHabits, setPastHabits] = useState<PastHabit[]>(() => storageService.getPastHabits());
-  const [taskState, setTaskState] = useState<TaskState>(() => storageService.getTaskState());
+  const [taskState, setTaskState] = useState<TaskState>(() => {
+    const saved = storageService.getTaskState();
+    const currentToday = getTodayString();
+    
+    // Si no hay fecha o es distinta, el useEffect se encargará de la renovación
+    // Solo reseteamos isCompleted si es un nuevo día para evitar flashes visuales
+    if (saved.lastAssignedDate !== currentToday) {
+      return { ...saved, isCompleted: false };
+    }
+    return saved;
+  });
   const [tips, setTips] = useState<Tip[]>(() => {
     const stored = storageService.getTips();
     return stored.length > 0 ? stored : TIPS_POOL;
@@ -81,68 +116,85 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Lógica de Integridad de Racha (Protector de Racha)
   const verifyStreakIntegrity = useCallback((currentToday: string) => {
-    if (checkins.length === 0) return;
+    // Si no hay historial, no hay nada que verificar
+    if (streak.streakHistory.length === 0) return;
 
-    const lastCheckinDate = streak.streakHistory[streak.streakHistory.length - 1];
-    if (!lastCheckinDate || lastCheckinDate === currentToday) return;
+    // Asegurar que el historial esté ordenado y sin duplicados
+    const sortedHistory = Array.from(new Set(streak.streakHistory)).sort();
+    const lastCheckinDate = sortedHistory[sortedHistory.length - 1];
+    
+    // Si ya se registró hoy o la fecha es futura (error de reloj), no hacer nada
+    if (lastCheckinDate >= currentToday) return;
 
     const yesterday = getYesterdayString(currentToday);
     
-    if (lastCheckinDate !== yesterday) {
-      const lastDate = new Date(lastCheckinDate + 'T12:00:00');
-      const nowDate = new Date(currentToday + 'T12:00:00');
-      const diffDays = Math.floor((nowDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+    // Si el último check-in fue ayer, la racha sigue viva (esperando el de hoy)
+    if (lastCheckinDate === yesterday) return;
 
-      if (diffDays > 1) {
-        let protectorsAvailable = rewards.streakProtectors;
-        let recoveredCount = 0;
-        let newCheckins: DailyCheckin[] = [];
-        let newStreakHistory: string[] = [];
+    // Si llegamos aquí, hay un hueco de al menos 1 día (el de ayer se perdió)
+    const diffDays = getDiffDays(lastCheckinDate, currentToday);
+    
+    // Si por alguna razón el cálculo de días da 1 o menos, abortar (doble seguridad)
+    if (diffDays <= 1) return;
 
-        let tempDate = new Date(lastDate);
-        tempDate.setDate(tempDate.getDate() + 1);
-        
-        while (tempDate < nowDate && protectorsAvailable > 0) {
-          const dateStr = tempDate.toISOString().split('T')[0];
-          if (!streak.streakHistory.includes(dateStr)) {
-            newCheckins.push({
-              date: dateStr,
-              buttonType: 'complete',
-              difficultyModeId: 'normal',
-              willpowerScore: 5,
-              notes: 'Protector de racha activado automáticamente',
-              timestamp: new Date().toISOString()
-            });
-            newStreakHistory.push(dateStr);
-            protectorsAvailable--;
-            recoveredCount++;
-          }
-          tempDate.setDate(tempDate.getDate() + 1);
-        }
+    let protectorsAvailable = rewards.streakProtectors;
+    let recoveredCount = 0;
+    let newCheckins: DailyCheckin[] = [];
+    let newStreakHistory: string[] = [];
 
-        if (recoveredCount > 0) {
-          setCheckins(prev => [...prev, ...newCheckins]);
-          setRewards(prev => ({ ...prev, streakProtectors: protectorsAvailable }));
-          setStreak(prev => ({
-            ...prev,
-            currentStreak: prev.currentStreak + recoveredCount,
-            longestStreak: Math.max(prev.longestStreak, prev.currentStreak + recoveredCount),
-            streakHistory: [...prev.streakHistory, ...newStreakHistory].sort()
-          }));
+    // Intentar llenar los huecos con protectores
+    // i=1 es ayer, i=2 es anteayer, etc.
+    for (let i = 1; i < diffDays; i++) {
+      const tempDate = new Date(currentToday + 'T12:00:00Z');
+      tempDate.setUTCDate(tempDate.getUTCDate() - i);
+      const dateStr = tempDate.toISOString().split('T')[0];
+
+      // Si este día no está en el historial, intentar protegerlo
+      if (!sortedHistory.includes(dateStr)) {
+        if (protectorsAvailable > 0) {
+          newCheckins.push({
+            date: dateStr,
+            buttonType: 'complete',
+            difficultyModeId: 'normal',
+            willpowerScore: 5,
+            notes: 'Protector de racha activado automáticamente',
+            timestamp: new Date().toISOString()
+          });
+          newStreakHistory.push(dateStr);
+          protectorsAvailable--;
+          recoveredCount++;
         } else {
-          setStreak(prev => ({
-            ...prev,
-            currentStreak: 0,
-            streakHistory: []
-          }));
+          // Se acabaron los protectores y hay un hueco real
+          recoveredCount = -1; 
+          break;
         }
       }
     }
-  }, [checkins, streak, rewards.streakProtectors]);
 
+    if (recoveredCount > 0) {
+      console.log(`[Streak] Recuperados ${recoveredCount} días con protectores. Nueva racha: ${streak.currentStreak + recoveredCount}`);
+      setCheckins(prev => [...prev, ...newCheckins]);
+      setRewards(prev => ({ ...prev, streakProtectors: protectorsAvailable }));
+      setStreak(prev => ({
+        ...prev,
+        currentStreak: prev.currentStreak + recoveredCount,
+        longestStreak: Math.max(prev.longestStreak, prev.currentStreak + recoveredCount),
+        streakHistory: [...prev.streakHistory, ...newStreakHistory].sort()
+      }));
+    } else if (recoveredCount === -1) {
+      console.log(`[Streak] Racha perdida. No hay más protectores para cubrir el hueco hasta ${lastCheckinDate}`);
+      setStreak(prev => ({
+        ...prev,
+        currentStreak: 0,
+        streakHistory: [] 
+      }));
+    }
+  }, [streak.streakHistory, streak.currentStreak, rewards.streakProtectors]);
+
+  // Verificar racha al iniciar y cuando cambia el día
   useEffect(() => {
     verifyStreakIntegrity(today);
-  }, []);
+  }, [today, verifyStreakIntegrity]);
 
   useEffect(() => {
     const checkDate = () => {
@@ -170,35 +222,37 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     if (isResetting.current) return;
     
+    // Solo renovar si la fecha guardada es distinta a hoy o no hay tarea
     if (taskState.lastAssignedDate !== today || !taskState.currentTaskId) {
-      let availableTasks = TASKS_POOL.filter(t => !taskState.history.includes(t.id));
-      
-      if (availableTasks.length === 0) {
-        const lastTaskId = taskState.currentTaskId;
-        availableTasks = TASKS_POOL.filter(t => t.id !== lastTaskId);
-        const pool = availableTasks.length > 0 ? availableTasks : TASKS_POOL;
-        const randomTask = pool[Math.floor(Math.random() * pool.length)];
+      setTaskState(prev => {
+        // Verificación de seguridad dentro del setter para evitar duplicados por re-renders
+        if (prev.lastAssignedDate === today && prev.currentTaskId) return prev;
+
+        let availableTasks = TASKS_POOL.filter(t => !prev.history.includes(t.id));
+        let randomTask;
+        let newHistory;
         
-        setTaskState(prev => ({
+        if (availableTasks.length === 0) {
+          const lastTaskId = prev.currentTaskId;
+          availableTasks = TASKS_POOL.filter(t => t.id !== lastTaskId);
+          const pool = availableTasks.length > 0 ? availableTasks : TASKS_POOL;
+          randomTask = pool[Math.floor(Math.random() * pool.length)];
+          newHistory = [randomTask.id];
+        } else {
+          randomTask = availableTasks[Math.floor(Math.random() * availableTasks.length)];
+          newHistory = [...prev.history, randomTask.id];
+        }
+
+        return {
           ...prev,
           currentTaskId: randomTask.id,
           lastAssignedDate: today,
           isCompleted: false,
-          history: [randomTask.id]
-        }));
-      } else {
-        const randomTask = availableTasks[Math.floor(Math.random() * availableTasks.length)];
-        
-        setTaskState(prev => ({
-          ...prev,
-          currentTaskId: randomTask.id,
-          lastAssignedDate: today,
-          isCompleted: false,
-          history: [...prev.history, randomTask.id]
-        }));
-      }
+          history: newHistory
+        };
+      });
     }
-  }, [today]);
+  }, [today, taskState.lastAssignedDate, taskState.currentTaskId]);
 
   useEffect(() => {
     if (isResetting.current) return;
@@ -232,17 +286,27 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     setCheckins(prev => [...prev, newCheckin]);
     setStreak(prev => {
-      const lastCheckinDate = prev.streakHistory[prev.streakHistory.length - 1];
+      const sortedHistory = Array.from(new Set(prev.streakHistory)).sort();
+      const lastCheckinDate = sortedHistory[sortedHistory.length - 1];
       const yesterday = getYesterdayString(today);
+      
+      // Si ya existe un check-in hoy, no incrementar la racha de nuevo (protección)
+      if (lastCheckinDate === today) {
+        console.log(`[Streak] Intento de check-in duplicado para ${today}. Ignorado.`);
+        return prev;
+      }
+
       const isContinuous = !lastCheckinDate || lastCheckinDate === yesterday;
       const newStreakCount = isContinuous ? prev.currentStreak + 1 : 1;
       
+      console.log(`[Streak] Check-in registrado. Hoy: ${today}, Ayer: ${yesterday}, Último: ${lastCheckinDate}, Continuo: ${isContinuous}, Nueva Racha: ${newStreakCount}`);
+
       return {
         ...prev,
         currentStreak: newStreakCount,
         longestStreak: Math.max(prev.longestStreak, newStreakCount),
         totalCompletions: prev.totalCompletions + 1,
-        streakHistory: [...prev.streakHistory, today]
+        streakHistory: [...prev.streakHistory, today].sort()
       };
     });
 
@@ -258,12 +322,13 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const completeDailyTask = () => {
+    if (taskState.isCompleted) return;
     setTaskState(prev => ({ ...prev, isCompleted: true }));
     setRewards(prev => ({ ...prev, availablePoints: prev.availablePoints + 5 }));
   };
 
   const addPoints = (amount: number) => setRewards(prev => ({ ...prev, availablePoints: prev.availablePoints + amount }));
-  const recordDiceRoll = () => setRewards(prev => ({ ...prev, lastDiceRollDate: today }));
+  const recordDiceRoll = (result: number) => setRewards(prev => ({ ...prev, lastDiceRollDate: today, lastDiceResult: result }));
   const updateSettings = (newSettings: UserSettings) => setSettings(newSettings);
   const updateDiceReward = (id: number, title: string, description: string) => 
     setDiceRewards(prev => prev.map(r => r.id === id ? { ...r, title, description } : r));
@@ -317,7 +382,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const startNewHabit = () => {
     // Rank calculation
-    let currentRankName = 'NV 1 - Perseo';
+    let currentRankName = 'NV 1 - Prometeo';
     if (streak.currentStreak >= 32) currentRankName = settings.gender === 'male' ? 'NV 4 - Hércules Semi-Dios' : 'NV 4 - Hércules Semi-Diosa';
     else if (streak.currentStreak >= 17) currentRankName = 'NV 3 - Aquiles';
     else if (streak.currentStreak >= 7) currentRankName = 'NV 2 - Jasón';
@@ -355,7 +420,8 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       date: new Date().toISOString(),
       willpowerHistory: historyData,
       avgWillpower: count > 0 ? (sum / count).toFixed(1) : "0.0",
-      checkinsSnapshot: [...checkins]
+      checkinsSnapshot: [...checkins],
+      habitLoop: settings.habitLoop
     };
     
     setPastHabits(prev => [archiveEntry, ...prev]);

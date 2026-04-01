@@ -68,6 +68,14 @@
         html.font-large .tracking-[0.4em] {
             tracking: 0.3em; /* Reducir tracking excesivo para evitar desbordes */
         }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin-slow 12s linear infinite;
+        }
     </style>
 <script type="importmap">
 {

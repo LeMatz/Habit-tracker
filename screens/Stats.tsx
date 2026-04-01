@@ -2,6 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { useHabits } from '../context/HabitContext';
 import Heatmap from '../components/Heatmap';
+import HabitLoopView from '../components/HabitLoopView';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid } from 'recharts';
 import { TrendingUp, BarChart3, Calendar, Activity, Shield, Flame, BarChart, History, Compass, Crown, Trophy, Target, X, Trash2, Info, Award, Zap, Ruler, Eye, Layers } from 'lucide-react';
 import { PastHabit } from '../types';
@@ -53,9 +54,9 @@ const Stats: React.FC = () => {
     };
     return { 
       level: 1,
-      name: 'Perseo', 
-      description: 'Iniciación. Estás usando las herramientas para vencer la inercia.',
-      feat: 'Venció a Medusa usando el ingenio y las herramientas que le brindaron los dioses. En esta fase de iniciación, usas herramientas inteligentes para no mirar de frente el miedo al fracaso y cortar de raíz las excusas que te paralizan. Diseñas tu sistema y ejecutas con precisión estratégica.',
+      name: 'Prometeo', 
+      description: 'Iniciación. Has robado el fuego de los Dioses para iluminar tu humanidad.',
+      feat: 'Asumes el costo de pensar por cuenta propia: tomas aquello que expande tu capacidad, aunque implique riesgo y castigo. Abandonas la obediencia pasiva y operas desde la responsabilidad de crear y sostener tu propio poder.',
       color: 'text-indigo-600 dark:text-indigo-400', 
       bg: 'bg-indigo-50 dark:bg-indigo-500/10', 
       border: 'border-indigo-200 dark:border-indigo-500/20', 
@@ -174,8 +175,8 @@ const Stats: React.FC = () => {
         title: "Matriz de Esfuerzo",
         subtitle: "Huella Visual",
         rules: [
-          { icon: <Layers size={18} className="text-indigo-400" />, title: "Funcionamiento", desc: "Este mapa visual no es lineal. Tus check-ins se distribuyen aleatoriamente para crear un mosaico de persistencia. El objetivo no es llenar una línea, sino teñir el mapa con tu voluntad." },
-          { icon: <Eye size={18} className="text-indigo-400" />, title: "Visión Global", desc: "Al observar la matriz en su totalidad, los patrones emergen del caos. La aleatoriedad desaparece cuando cumplimos nuestro hábito completo todos los días." }
+          { icon: <Layers size={18} className="text-indigo-400" />, title: "Cronología", desc: "Este mapa es lineal. Cada cuadro es un día de los últimos 84 días. Los cuadros negros son días que perdiste (huecos en tu racha)." },
+          { icon: <Eye size={18} className="text-indigo-400" />, title: "Visión de Racha", desc: "Los cuadros grises son el futuro. Tu misión es evitar que se conviertan en huecos negros manteniendo la constancia diaria." }
         ]
       }
     }[infoModal];
@@ -299,7 +300,17 @@ const Stats: React.FC = () => {
                   <Calendar className="text-indigo-500" size={16} />
                   <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Matriz de Esfuerzo</h4>
                 </div>
-                <Heatmap checkins={habit.checkinsSnapshot} />
+                <Heatmap checkins={habit.checkinsSnapshot} endDate={habit.date.split('T')[0]} />
+              </div>
+            )}
+
+            {/* Habit Loop */}
+            {habit.habitLoop && (
+              <div className="bg-white/5 border border-white/5 py-10 px-3 sm:px-10 rounded-[2.5rem] sm:rounded-[3rem] relative overflow-visible">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 text-slate-400 text-[7px] font-black uppercase tracking-[0.3em] px-3 py-1 rounded-full border border-white/10 z-30">
+                  Ciclo de Identidad
+                </div>
+                <HabitLoopView loop={habit.habitLoop} title="" />
               </div>
             )}
 
@@ -323,7 +334,8 @@ const Stats: React.FC = () => {
     { label: settings.completeHabit || 'Completo', color: 'bg-cyan-500', shadow: 'shadow-[0_0_8px_rgba(6,182,212,0.6)]' },
     { label: settings.twoMinuteHabit || '2 min', color: 'bg-indigo-500', shadow: 'shadow-[0_0_8px_rgba(99,102,241,0.6)]' },
     { label: settings.emergencyHabit || 'EMD', color: 'bg-orange-500', shadow: 'shadow-[0_0_8px_rgba(249,115,22,0.6)]' },
-    { label: 'Sin Registro', color: 'bg-slate-800/40', shadow: 'border border-white/5' },
+    { label: 'Día Perdido', color: 'bg-white', shadow: 'shadow-[0_0_8px_rgba(255,255,255,0.4)]' },
+    { label: 'Sin Registro', color: 'bg-slate-900', shadow: 'border border-white/5' },
   ];
 
   return (
@@ -432,7 +444,7 @@ const Stats: React.FC = () => {
           <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-900 dark:text-white">Matriz de Esfuerzo</h3>
         </div>
         <div className="space-y-6">
-          <Heatmap checkins={checkins} />
+          <Heatmap checkins={checkins} endDate={today} />
           <div className="px-2 pt-2 border-t border-slate-100 dark:border-white/5">
             <div className="grid grid-cols-2 gap-y-4 gap-x-2">
               {legendItems.map((item, idx) => (
@@ -461,7 +473,7 @@ const Stats: React.FC = () => {
               <div className="flex flex-col space-y-3 relative z-10">
                 <div className="flex justify-between items-start">
                   <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">{habit.name}</h4>
-                  <div className={`flex items-center space-x-2 text-[8px] font-black uppercase px-2 py-1 rounded-full border ${getRankColor(habit.rankReached || 'Perseo')}`}><span>{habit.rankReached || 'Perseo'}</span></div>
+                  <div className={`flex items-center space-x-2 text-[8px] font-black uppercase px-2 py-1 rounded-full border ${getRankColor(habit.rankReached || 'Prometeo')}`}><span>{habit.rankReached || 'Prometeo'}</span></div>
                 </div>
               </div>
             </button>

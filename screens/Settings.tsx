@@ -108,6 +108,57 @@ const Settings: React.FC = () => {
         </div>
       </section>
 
+      {/* Ciclo del Hábito */}
+      <section className="space-y-5">
+        <div className="flex items-center space-x-2 px-3">
+           <RotateCcw size={14} className="text-indigo-500" />
+           <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Ciclo del Hábito (James Clear)</h3>
+        </div>
+        <div className="p-8 rounded-[3rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-6 shadow-xl transition-colors">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Señal</label>
+              <input 
+                type="text" 
+                value={settings.habitLoop.cue}
+                onChange={(e) => handleChange('habitLoop', { ...settings.habitLoop, cue: e.target.value })}
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 outline-none font-bold text-xs text-slate-900 dark:text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Anhelo</label>
+              <input 
+                type="text" 
+                value={settings.habitLoop.craving}
+                onChange={(e) => handleChange('habitLoop', { ...settings.habitLoop, craving: e.target.value })}
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 outline-none font-bold text-xs text-slate-900 dark:text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Respuesta</label>
+              <input 
+                type="text" 
+                value={settings.habitLoop.response}
+                onChange={(e) => handleChange('habitLoop', { ...settings.habitLoop, response: e.target.value })}
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 outline-none font-bold text-xs text-slate-900 dark:text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Recompensa</label>
+              <input 
+                type="text" 
+                value={settings.habitLoop.reward}
+                onChange={(e) => handleChange('habitLoop', { ...settings.habitLoop, reward: e.target.value })}
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 outline-none font-bold text-xs text-slate-900 dark:text-white"
+              />
+            </div>
+          </div>
+          <p className="text-[9px] text-slate-400 font-medium leading-relaxed italic text-center px-4">
+            Define los cuatro pasos de tu hábito para hacerlo consciente y automático.
+          </p>
+        </div>
+      </section>
+
       {/* Configuración de Botones Personalizados */}
       <section className="space-y-5">
         <div className="flex items-center space-x-2 px-3">

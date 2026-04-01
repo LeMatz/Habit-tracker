@@ -61,6 +61,180 @@ export const TASKS_POOL: DailyTask[] = [
     title: 'Reencuadre Cognitivo',
     description: 'Identifica un pensamiento negativo que hayas tenido hoy y escríbelo. Luego, busca una interpretación alternativa que sea más útil.',
     neuroBasis: 'Revalorización: Fortalece las conexiones inhibitorias entre el córtex prefrontal y la amígdala.'
+  },
+  {
+    id: 't11',
+    title: 'Inhibición de Impulso',
+    description: 'Retrasa durante 20 segundos cualquier impulso automático (mirar el celular, levantarte, hablar) y observa la sensación sin actuar.',
+    neuroBasis: 'Control inhibitorio: Entrena los circuitos cerebrales responsables de frenar respuestas automáticas.'
+  },
+  {
+    id: 't12',
+    title: 'Reencuadre Rápido',
+    description: 'Toma un pensamiento limitante actual y reformúlalo en una versión orientada a la acción.',
+    neuroBasis: 'Reestructuración cognitiva: Modula la actividad prefrontal y reduce la dominancia de patrones automáticos.'
+  },
+  {
+    id: 't13',
+    title: 'Conteo Inverso Atento',
+    description: 'Cuenta hacia atrás desde 50 en intervalos de 3 durante 90 segundos sin perder el hilo.',
+    neuroBasis: 'Memoria de trabajo: Activa el córtex prefrontal dorsolateral y mejora la manipulación activa de información.'
+  },
+  {
+    id: 't14',
+    title: 'Regla Arbitraria',
+    description: 'Durante 2 minutos habla, escribe o piensa evitando una letra específica del abecedario.',
+    neuroBasis: 'Flexibilidad cognitiva: Exige supervisión ejecutiva y control inhibitorio lingüístico.'
+  },
+  {
+    id: 't15',
+    title: 'Micro-Memorización',
+    description: 'Memoriza una secuencia de 7 dígitos y repítela mentalmente en orden inverso.',
+    neuroBasis: 'Memoria operativa: Refuerza la actualización y reorganización de información en tiempo real.'
+  },
+  {
+    id: 't16',
+    title: 'Etiqueta Emocional Precisa',
+    description: 'Nombra con precisión la emoción predominante que sientes en este momento.',
+    neuroBasis: 'Regulación emocional: La rotulación consciente reduce la reactividad límbica.'
+  },
+  {
+    id: 't17',
+    title: 'Micro-Decisión Consciente',
+    description: 'Elige deliberadamente modificar una pequeña acción automática de tu día.',
+    neuroBasis: 'Interrupción de automatismos: Debilita circuitos habituales y refuerza la elección consciente.'
+  },
+  {
+    id: 't18',
+    title: 'Escaneo Corporal Rápido',
+    description: 'Recorre mentalmente tu cuerpo detectando tensiones específicas sin intentar cambiarlas.',
+    neuroBasis: 'Conciencia interoceptiva: Mejora la integración entre corteza prefrontal e ínsula.'
+  },
+  {
+    id: 't19',
+    title: 'Reordenamiento Mental',
+    description: 'Toma tres eventos del día y ordénalos cronológicamente con precisión.',
+    neuroBasis: 'Secuenciación temporal: Refuerza la organización ejecutiva y memoria episódica.'
+  },
+  {
+    id: 't20',
+    title: 'Generación Alternativa',
+    description: 'Produce tres explicaciones distintas para un mismo hecho cotidiano.',
+    neuroBasis: 'Flexibilidad cognitiva: Amplía el repertorio interpretativo y reduce rigidez mental.'
+  },
+  {
+    id: 't21',
+    title: 'Compresión Conceptual',
+    description: 'Resume mentalmente una idea compleja en una sola frase clara.',
+    neuroBasis: 'Síntesis ejecutiva: Activa procesos de abstracción en el córtex prefrontal.'
+  },
+  {
+    id: 't22',
+    title: 'Perspectiva Futura',
+    description: 'Imagina cómo evaluarías una decisión actual dentro de un año.',
+    neuroBasis: 'Proyección temporal: Activa simulación prospectiva y control prefrontal.'
+  },
+  {
+    id: 't23',
+    title: 'Reducción a Esencia',
+    description: 'Toma un problema actual y exprésalo en no más de cinco palabras.',
+    neuroBasis: 'Abstracción ejecutiva: Simplifica representaciones mentales complejas.'
+  },
+  {
+    id: 't24',
+    title: 'Clasificación Rápida',
+    description: 'Agrupa mentalmente cinco objetos de tu entorno según un criterio inventado (forma, color, material, etc).',
+    neuroBasis: 'Categorización flexible: Activa redes frontales de organización conceptual.'
+  },
+  {
+    id: 't25',
+    title: 'Micro-Agradecimiento Analítico',
+    description: 'Identifica un evento positivo y explica brevemente por qué ocurrió.',
+    neuroBasis: 'Reatribución consciente: Refuerza análisis causal deliberado.'
+  },
+  {
+    id: 't26',
+    title: 'Diferenciación Hecho-Opinión',
+    description: 'Toma un pensamiento reciente y separa datos objetivos de interpretaciones.',
+    neuroBasis: 'Razonamiento crítico: Mejora discriminación cognitiva y claridad mental.'
+  },
+  {
+    id: 't27',
+    title: 'Contraste Intencional',
+    description: 'Formula un argumento opuesto al que sostienes actualmente.',
+    neuroBasis: 'Pensamiento dialéctico: Amplía flexibilidad y reduce sesgo confirmatorio.'
+  },
+  {
+    id: 't28',
+    title: 'Recuerdo Detallado',
+    description: 'Evoca un momento reciente e identifica tres detalles sensoriales específicos.',
+    neuroBasis: 'Recuperación episódica: Activa memoria contextual y precisión atencional.'
+  },
+  {
+    id: 't29',
+    title: 'Rotación Mental',
+    description: 'Imagina un objeto simple y gíralo mentalmente en 3 dimensiones durante 90 segundos.',
+    neuroBasis: 'Manipulación visoespacial: Activa memoria de trabajo espacial y control atencional.'
+  },
+  {
+    id: 't30',
+    title: 'Causa Múltiple',
+    description: 'Piensa un evento reciente y formula al menos tres causas posibles distintas.',
+    neuroBasis: 'Razonamiento multicausal: Reduce simplificación excesiva y mejora análisis sistémico.'
+  },
+  {
+    id: 't31',
+    title: 'Regla Nueva Instantánea',
+    description: 'Inventa una regla simple para tu conducta durante los próximos 2 minutos y cúmplela estrictamente.',
+    neuroBasis: 'Autogobierno conductual: Refuerza control voluntario sobre automatismos.'
+  },
+  {
+    id: 't32',
+    title: 'Postura Ejecutiva',
+    description: 'Ajusta tu postura erguida durante 2 minutos alineando espalda y cuello conscientemente.',
+    neuroBasis: 'Embodiment cognitivo: La alineación postural influye en activación prefrontal y autorregulación.'
+  },
+  {
+    id: 't33',
+    title: 'Tensión y Liberación',
+    description: 'Contrae suavemente ambos puños durante 5 segundos y relaja, repitiendo 5 veces.',
+    neuroBasis: 'Conciencia muscular voluntaria: Refuerza la corteza motora para la autorregulación emocional.'
+  },
+  {
+    id: 't34',
+    title: 'Equilibrio Atento',
+    description: 'Mantente de pie en un solo pie durante 60 segundos sosteniendo foco estable.',
+    neuroBasis: 'Control postural consciente: Integra cerebelo y redes ejecutivas en regulación sostenida.'
+  },
+  {
+    id: 't35',
+    title: 'Evaluación de Evidencia',
+    description: 'Toma una creencia actual y enumera mentalmente una evidencia a favor y otra en contra.',
+    neuroBasis: 'Balance crítico: Reduce sesgo confirmatorio y fortalece juicio racional.'
+  },
+  {
+    id: 't36',
+    title: 'Analogía Funcional',
+    description: 'Relaciona un problema actual con un fenómeno natural y extrae una lección estructural.',
+    neuroBasis: 'Transferencia abstracta: Mejora capacidad de generalización conceptual.'
+  },
+  {
+    id: 't37',
+    title: 'Reconocimiento de Patrón',
+    description: 'Identifica un patrón repetitivo en tu conducta durante la última semana.',
+    neuroBasis: 'Detección de regularidades: Activa análisis longitudinal y conciencia estratégica.'
+  },
+  {
+    id: 't38',
+    title: 'Secuencia Inversa',
+    description: 'Toma una rutina conocida y descríbela mentalmente desde el final hacia el inicio.',
+    neuroBasis: 'Reversibilidad cognitiva: Entrena manipulación secuencial compleja.'
+  },
+  {
+    id: 't39',
+    title: 'Movilidad Cervical Atenta',
+    description: 'Gira lentamente la cabeza hacia ambos lados coordinando movimiento con respiración. Luego hazlo mirando hacia arriba y abajo',
+    neuroBasis: 'Conciencia corporal fina: Mejora conexión entre percepción interoceptiva y control cortical.'
   }
 ];
 

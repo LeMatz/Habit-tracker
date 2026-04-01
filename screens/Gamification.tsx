@@ -24,7 +24,9 @@ import {
   Info,
   Dice1,
   LayoutGrid,
-  ZapIcon
+  ZapIcon,
+  History,
+  Dices
 } from 'lucide-react';
 import { UserReward } from '../types';
 
@@ -33,12 +35,22 @@ const Gamification: React.FC = () => {
   const [isRolling, setIsRolling] = useState(false);
   const [diceResult, setDiceResult] = useState<number | null>(null);
   const [purchasedReward, setPurchasedReward] = useState<UserReward | null>(null);
+  const [showDiceRewardModal, setShowDiceRewardModal] = useState(false);
   const [infoModal, setInfoModal] = useState<'dice' | 'inventory' | 'mana' | null>(null);
 
   const habitCompleted = hasCheckedInToday();
   const alreadyRolled = rewards.lastDiceRollDate === today;
   const canRoll = habitCompleted && !alreadyRolled;
   const heroTerm = settings.gender === 'male' ? 'Héroe' : 'Heroína';
+
+  // Persistir el resultado del dado durante la sesión si ya se lanzó hoy
+  React.useEffect(() => {
+    if (alreadyRolled && rewards.lastDiceResult) {
+      setDiceResult(rewards.lastDiceResult);
+    }
+  }, [alreadyRolled, rewards.lastDiceResult]);
+
+  const effectiveDiceResult = diceResult || (alreadyRolled ? rewards.lastDiceResult : null);
 
   const handleRollDice = () => {
     if (isRolling || !canRoll) return;
@@ -54,7 +66,8 @@ const Gamification: React.FC = () => {
       haptics.success();
       if (settings.soundsEnabled) soundService.playDiceResult();
       if (result === 6) addPoints(3);
-      recordDiceRoll();
+      recordDiceRoll(result);
+      setShowDiceRewardModal(true);
     }, 1500);
   };
 
@@ -248,11 +261,59 @@ const Gamification: React.FC = () => {
       <section className="space-y-6 relative">
         <button onClick={() => { haptics.selection(); setInfoModal('dice'); }} className="absolute top-0 right-4 p-2 text-slate-500 hover:text-white z-20"><Info size={18} /></button>
         <div className="flex items-center space-x-2 px-4"><Coins size={14} className="text-indigo-500" /><h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Mecánica de Suerte</h3></div>
-        <div className={`relative p-10 rounded-[4rem] group ${canRoll ? 'bg-gradient-to-br from-indigo-600 to-indigo-900 shadow-xl' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 opacity-90'}`}>
+        <div className={`relative p-10 rounded-[4rem] group transition-all duration-500 ${canRoll || isRolling ? 'bg-gradient-to-br from-indigo-600 to-indigo-900 shadow-xl' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 opacity-90'}`}>
           <div className="relative z-10 flex flex-col items-center space-y-8">
-            <div className="text-center space-y-2"><h3 className={`font-black text-2xl tracking-tighter uppercase ${canRoll ? 'text-white' : 'text-slate-900 dark:text-white'}`}>Dado del destino</h3></div>
-            <div className={`w-32 h-32 bg-white rounded-[2.8rem] flex items-center justify-center text-6xl text-indigo-700 transition-all ${isRolling ? 'animate-bounce' : !canRoll ? 'grayscale opacity-40' : ''}`}>{!habitCompleted ? <Lock size={44} /> : isRolling ? <Dice5 className="animate-spin" /> : diceResult || <Dice5 />}</div>
-            <button onClick={handleRollDice} disabled={isRolling || !canRoll} className={`w-full py-6 font-black rounded-[2rem] shadow-2xl transition-all uppercase tracking-[0.25em] text-[10px] ${canRoll ? 'bg-white text-indigo-700' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>{isRolling ? 'Procesando...' : 'Lanzar Dado'}</button>
+            <div className="text-center space-y-2">
+              <h3 className={`font-black text-2xl tracking-tighter uppercase ${canRoll || isRolling ? 'text-white' : 'text-slate-900 dark:text-white'}`}>Dado del destino</h3>
+            </div>
+            
+            <div className={`w-32 h-32 bg-white rounded-[2.8rem] flex items-center justify-center text-6xl text-indigo-700 transition-all shadow-2xl ${isRolling ? 'animate-bounce' : !canRoll && !effectiveDiceResult ? 'grayscale opacity-40' : ''}`}>
+              {!habitCompleted ? <Lock size={44} /> : isRolling ? <Dice5 className="animate-spin" /> : effectiveDiceResult || <Dice5 />}
+            </div>
+
+            {effectiveDiceResult && !isRolling && (
+              <div className="text-center animate-in fade-in zoom-in duration-500 py-2">
+                <p className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-[0.3em] mb-1">Recompensa Activa</p>
+                <p className={`font-black text-3xl uppercase tracking-tighter ${canRoll || isRolling ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+                  {diceRewards.find(r => r.diceNumber === effectiveDiceResult)?.title}
+                </p>
+                {effectiveDiceResult === 6 && (
+                  <p className="text-amber-400 text-[10px] font-bold uppercase tracking-widest mt-2 flex items-center justify-center space-x-1">
+                    <Sparkles size={12} />
+                    <span>+3 Puntos de Maná Extra</span>
+                    <Sparkles size={12} />
+                  </p>
+                )}
+              </div>
+            )}
+
+            <button 
+              onClick={handleRollDice} 
+              disabled={isRolling || !canRoll} 
+              className={`w-full py-6 font-black rounded-[2rem] shadow-2xl transition-all uppercase tracking-[0.25em] text-[10px] px-4 ${canRoll ? 'bg-white text-indigo-700 hover:scale-[1.02] active:scale-95' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}
+            >
+              {isRolling ? 'Invocando...' : alreadyRolled && effectiveDiceResult ? (
+                <span className="flex items-center justify-center space-x-2">
+                  <span>{diceRewards.find(r => r.diceNumber === effectiveDiceResult)?.title}</span>
+                </span>
+              ) : 'Lanzar Dado'}
+            </button>
+          </div>
+        </div>
+
+        {/* Lista de Premios del Dado */}
+        <div className="px-4 animate-in fade-in slide-in-from-top-4 duration-700">
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <Dices size={12} className="text-indigo-500" />
+            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Premios del Dado del Destino</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {diceRewards.map((reward) => (
+              <div key={reward.id} className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 p-3 rounded-2xl flex flex-col items-center text-center transition-all hover:scale-105 shadow-sm">
+                <span className="text-xs font-black text-indigo-500 mb-1">{reward.diceNumber}</span>
+                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 leading-tight line-clamp-2">{reward.title}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -260,7 +321,20 @@ const Gamification: React.FC = () => {
       {/* Catálogo */}
       <section className="space-y-8 relative">
         <button onClick={() => { haptics.selection(); setInfoModal('inventory'); }} className="absolute top-0 right-4 p-2 text-slate-500 hover:text-white z-20"><Info size={18} /></button>
-        <div className="flex items-center justify-between px-4"><div className="flex items-center space-x-3"><div className="w-2 h-2 bg-indigo-500 rounded-full"></div><h3 className="font-black text-[11px] text-slate-500 uppercase tracking-[0.3em]">Inventario de Élite</h3></div></div>
+        <div className="flex items-center justify-between px-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+            <h3 className="font-black text-[11px] text-slate-500 uppercase tracking-[0.3em]">Inventario de Élite</h3>
+          </div>
+          {rewards.streakProtectors > 0 && (
+            <div className="flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
+              <ShieldCheck size={12} className="text-emerald-500" />
+              <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                {rewards.streakProtectors} {rewards.streakProtectors === 1 ? 'Protector' : 'Protectores'}
+              </span>
+            </div>
+          )}
+        </div>
         <div className="space-y-6">
           {rewards.rewardsCatalog.map((reward) => {
             const isAffordable = rewards.availablePoints >= reward.cost;
@@ -274,6 +348,60 @@ const Gamification: React.FC = () => {
         </div>
       </section>
 
+      {/* Historial de Compras */}
+      {rewards.purchaseHistory && rewards.purchaseHistory.length > 0 && (
+        <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="flex items-center space-x-3 px-4">
+            <History size={14} className="text-slate-400" />
+            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Historial de Canjes</h3>
+          </div>
+          
+          <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 rounded-[2.5rem] overflow-hidden">
+            <div className="divide-y divide-slate-100 dark:divide-white/5">
+              {rewards.purchaseHistory.slice(0, 5).map((transaction) => {
+                const reward = rewards.rewardsCatalog.find(r => r.id === transaction.rewardId);
+                const date = new Date(transaction.date).toLocaleDateString('es-ES', { 
+                  day: '2-digit', 
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+                
+                return (
+                  <div key={transaction.id} className="p-5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                    <div className="flex items-center space-x-4">
+                      <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500">
+                        {reward ? renderRewardIcon(reward.icon, 16, "p-0") : <Gift size={16} />}
+                      </div>
+                      <div>
+                        <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                          {reward?.name || 'Recompensa Desconocida'}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-medium">
+                          {date}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-black text-indigo-500 uppercase tracking-wider">
+                        -{transaction.pointsSpent} MANÁ
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {rewards.purchaseHistory.length > 5 && (
+              <div className="p-4 text-center border-t border-slate-100 dark:border-white/5">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                  Y {rewards.purchaseHistory.length - 5} canjes más...
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {purchasedReward && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/85 backdrop-blur-2xl animate-in fade-in duration-300">
           <div className="bg-slate-900 border border-white/10 rounded-[3.5rem] w-full max-w-sm p-8 shadow-2xl text-center">
@@ -282,6 +410,48 @@ const Gamification: React.FC = () => {
               {renderRewardIcon(purchasedReward.icon, 48, "p-8")}
               <h3 className="text-3xl font-black text-white tracking-tighter">¡Felicidades, {heroTerm}!</h3>
               <button onClick={() => setPurchasedReward(null)} className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] uppercase tracking-widest text-[10px]">Continuar Misión</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDiceRewardModal && diceResult && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/90 backdrop-blur-3xl animate-in fade-in duration-500">
+          <div className="bg-[#020617] border border-white/10 rounded-[4rem] w-full max-w-sm p-10 shadow-2xl text-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none"></div>
+            <button onClick={() => setShowDiceRewardModal(false)} className="absolute top-8 right-8 p-2 text-slate-500 hover:text-white z-20"><X size={20} /></button>
+            
+            <div className="relative z-10 flex flex-col items-center space-y-8">
+              <div className="p-6 bg-white rounded-[2.5rem] shadow-[0_0_40px_rgba(99,102,241,0.4)] animate-bounce">
+                <div className="text-6xl text-indigo-700 font-black">
+                  {diceResult}
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em]">Recompensa del Destino</p>
+                <h3 className="text-4xl font-black text-white tracking-tighter uppercase leading-none">
+                  {diceRewards.find(r => r.diceNumber === diceResult)?.title}
+                </h3>
+                <p className="text-slate-400 text-xs font-medium px-4">
+                  {diceRewards.find(r => r.diceNumber === diceResult)?.description || 'Has invocado un premio especial por tu disciplina diaria.'}
+                </p>
+              </div>
+
+              {diceResult === 6 && (
+                <div className="bg-amber-500/10 border border-amber-500/20 px-6 py-3 rounded-2xl flex items-center space-x-3">
+                  <Sparkles className="text-amber-400" size={18} />
+                  <span className="text-amber-400 text-[10px] font-black uppercase tracking-widest">+3 Puntos de Maná Extra</span>
+                  <Sparkles className="text-amber-400" size={18} />
+                </div>
+              )}
+
+              <button 
+                onClick={() => setShowDiceRewardModal(false)} 
+                className="w-full bg-white text-indigo-950 font-black py-6 rounded-[2rem] uppercase tracking-widest text-[10px] shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+              >
+                Reclamar Recompensa
+              </button>
             </div>
           </div>
         </div>

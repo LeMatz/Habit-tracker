@@ -39,6 +39,13 @@ export interface TaskState {
   history: string[];
 }
 
+export interface HabitLoop {
+  cue: string;
+  craving: string;
+  response: string;
+  reward: string;
+}
+
 export interface UserSettings {
   habitName: string;
   isDarkMode: boolean;
@@ -51,6 +58,7 @@ export interface UserSettings {
   emergencyHabit: string;
   twoMinuteHabit: string;
   completeHabit: string;
+  habitLoop: HabitLoop;
 }
 
 export interface TreasureReward {
@@ -85,6 +93,7 @@ export interface RewardSystem {
   rewardsCatalog: UserReward[];
   purchaseHistory: Transaction[];
   lastDiceRollDate?: string;
+  lastDiceResult?: number;
   streakProtectors: number;
 }
 
@@ -98,6 +107,7 @@ export interface PastHabit {
   willpowerHistory?: { dateLabel: string, willpower: number }[];
   avgWillpower?: string;
   checkinsSnapshot?: DailyCheckin[];
+  habitLoop?: HabitLoop;
 }
 
 export interface Tip {
