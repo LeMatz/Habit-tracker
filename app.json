@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Habit Tracker",
+    "slug": "habit-tracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "backgroundColor": "#020617"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.sistemashce.sistemashce",
+      "buildNumber": "2",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#020617"
+      },
+      "package": "com.sistemashce.sistemashce"
+    },
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "plugins": [
+      "expo-audio",
+      "expo-notifications"
+    ]
+  }
+}
