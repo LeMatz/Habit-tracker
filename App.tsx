@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, Text } from 'react-native';
 import { Home, ListChecks, BarChart3, Gift, Settings as SettingsIcon } from 'lucide-react-native';
+import { HabitProvider } from './context/HabitContext';
 
 const Tab = createBottomTabNavigator();
 
@@ -19,8 +20,9 @@ function Placeholder({ name }: { name: string }) {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar style="light" />
+      <HabitProvider>
+        <NavigationContainer>
+          <StatusBar style="light" />
         <Tab.Navigator
           screenOptions={{
             headerShown: false,
@@ -59,8 +61,9 @@ export default function App() {
           >
             {() => <Placeholder name="Settings" />}
           </Tab.Screen>
-        </Tab.Navigator>
-      </NavigationContainer>
+          </Tab.Navigator>
+        </NavigationContainer>
+      </HabitProvider>
     </SafeAreaProvider>
   );
 }
