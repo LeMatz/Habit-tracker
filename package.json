@@ -5,56 +5,38 @@
   "main": "index.ts",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
-    "build": "tsc && vite build",
-    "lint": "tsc --noEmit",
-    "preview": "vite preview",
-    "mobile": "npx expo start",
-    "mobile:ios": "npx expo run:ios",
-    "mobile:android": "npx expo run:android",
-    "android": "expo run:android",
-    "ios": "expo run:ios"
+    "start": "npx expo start",
+    "ios": "npx expo run:ios",
+    "android": "npx expo run:android",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
-    "@react-native-community/datetimepicker": "8.4.4",
     "@react-native-community/slider": "5.0.1",
     "@react-navigation/bottom-tabs": "^7.15.9",
     "@react-navigation/native": "^7.2.2",
-    "clsx": "^2.1.1",
     "expo": "~54.0.4",
     "expo-audio": "~1.1.1",
-    "expo-blur": "~15.0.8",
     "expo-constants": "~18.0.13",
     "expo-haptics": "~15.0.8",
     "expo-linear-gradient": "~15.0.8",
     "expo-notifications": "~0.32.16",
     "expo-status-bar": "~3.0.9",
-    "lucide-react": "^0.462.0",
     "lucide-react-native": "^1.8.0",
     "nativewind": "^4.2.3",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0",
     "react-native": "0.81.5",
     "react-native-gifted-charts": "^1.4.76",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
     "react-native-svg": "15.12.1",
-    "react-native-webview": "13.15.0",
-    "react-native-worklets": "0.5.1",
-    "recharts": "^2.12.7",
-    "tailwind-merge": "^2.5.2"
+    "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
     "@types/node": "^22.13.1",
     "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.47",
     "tailwindcss": "^3.4.19",
-    "typescript": "^5.5.3",
-    "vite": "^5.4.8"
+    "typescript": "^5.5.3"
   }
 }
