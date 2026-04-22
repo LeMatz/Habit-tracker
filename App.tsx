@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, Text } from 'react-native';
 import { Home, ListChecks, BarChart3, Gift, Settings as SettingsIcon } from 'lucide-react-native';
 import { HabitProvider } from './context/HabitContext';
+import HomeScreen from './screens/Home';
 
 const Tab = createBottomTabNavigator();
 
@@ -33,10 +34,9 @@ export default function App() {
         >
           <Tab.Screen
             name="Home"
+            component={HomeScreen}
             options={{ tabBarIcon: ({ color, size }) => <Home size={size} color={color} /> }}
-          >
-            {() => <Placeholder name="Home" />}
-          </Tab.Screen>
+          />
           <Tab.Screen
             name="Tasks"
             options={{ tabBarIcon: ({ color, size }) => <ListChecks size={size} color={color} /> }}
