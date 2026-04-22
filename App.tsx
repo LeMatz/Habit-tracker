@@ -8,6 +8,7 @@ import { Home, ListChecks, BarChart3, Gift, Settings as SettingsIcon } from 'luc
 import { HabitProvider } from './context/HabitContext';
 import HomeScreen from './screens/Home';
 import TasksScreen from './screens/Tasks';
+import SettingsScreen from './screens/Settings';
 
 const Tab = createBottomTabNavigator();
 
@@ -57,10 +58,9 @@ export default function App() {
           </Tab.Screen>
           <Tab.Screen
             name="Settings"
+            component={SettingsScreen}
             options={{ tabBarIcon: ({ color, size }) => <SettingsIcon size={size} color={color} /> }}
-          >
-            {() => <Placeholder name="Settings" />}
-          </Tab.Screen>
+          />
           </Tab.Navigator>
         </NavigationContainer>
       </HabitProvider>

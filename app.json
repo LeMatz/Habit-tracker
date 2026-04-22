@@ -29,7 +29,8 @@
     ],
     "plugins": [
       "expo-audio",
-      "expo-notifications"
+      "expo-notifications",
+      "@react-native-community/datetimepicker"
     ]
   }
 }
