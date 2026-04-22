@@ -10,6 +10,7 @@ import HomeScreen from './screens/Home';
 import TasksScreen from './screens/Tasks';
 import SettingsScreen from './screens/Settings';
 import StatsScreen from './screens/Stats';
+import GamificationScreen from './screens/Gamification';
 
 const Tab = createBottomTabNavigator();
 
@@ -52,10 +53,9 @@ export default function App() {
           />
           <Tab.Screen
             name="Rewards"
+            component={GamificationScreen}
             options={{ tabBarIcon: ({ color, size }) => <Gift size={size} color={color} /> }}
-          >
-            {() => <Placeholder name="Rewards" />}
-          </Tab.Screen>
+          />
           <Tab.Screen
             name="Settings"
             component={SettingsScreen}

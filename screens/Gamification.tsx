@@ -1,37 +1,61 @@
-
-import React, { useState } from 'react';
-import { useHabits } from '../context/HabitContext';
-import { haptics } from '../utils/haptics';
-import { soundService } from '../utils/soundService';
-import { 
-  Dice5, 
-  ShoppingBag, 
-  Lock, 
-  ShieldCheck, 
-  Scissors, 
-  Zap, 
-  Music, 
+import React, { useEffect, useState } from 'react';
+import { View, Text, Pressable, ScrollView, Modal } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import {
+  Dice5,
+  ShoppingBag,
+  Lock,
+  ShieldCheck,
+  Scissors,
+  Zap,
+  Music,
   BookOpen,
   Sparkles,
   Gift,
   Coffee,
   Coins,
   Infinity as InfinityIcon,
-  CircleDot,
   X,
-  Trophy,
   CheckCircle2,
   Info,
   Dice1,
   LayoutGrid,
-  ZapIcon,
   History,
-  Dices
-} from 'lucide-react';
+  Dices,
+} from 'lucide-react-native';
+import { useHabits } from '../context/HabitContext';
+import { haptics } from '../utils/haptics';
+import { soundService } from '../utils/soundService';
+import Layout from '../components/Layout';
 import { UserReward } from '../types';
 
+const renderRewardIcon = (iconName?: string, size = 24, color = '#ffffff') => {
+  const IconMap: Record<string, React.ComponentType<any>> = {
+    Scissors,
+    ShieldCheck,
+    Zap,
+    Music,
+    BookOpen,
+    Coffee,
+    Sparkles,
+    Gift,
+  };
+  const Comp = IconMap[iconName ?? 'Sparkles'] || Sparkles;
+  return <Comp size={size} color={color} />;
+};
+
 const Gamification: React.FC = () => {
-  const { rewards, redeemReward, addPoints, diceRewards, hasCheckedInToday, recordDiceRoll, settings, today } = useHabits();
+  const {
+    rewards,
+    redeemReward,
+    addPoints,
+    diceRewards,
+    hasCheckedInToday,
+    recordDiceRoll,
+    settings,
+    today,
+  } = useHabits();
+
   const [isRolling, setIsRolling] = useState(false);
   const [diceResult, setDiceResult] = useState<number | null>(null);
   const [purchasedReward, setPurchasedReward] = useState<UserReward | null>(null);
@@ -43,8 +67,7 @@ const Gamification: React.FC = () => {
   const canRoll = habitCompleted && !alreadyRolled;
   const heroTerm = settings.gender === 'male' ? 'Héroe' : 'Heroína';
 
-  // Persistir el resultado del dado durante la sesión si ya se lanzó hoy
-  React.useEffect(() => {
+  useEffect(() => {
     if (alreadyRolled && rewards.lastDiceResult) {
       setDiceResult(rewards.lastDiceResult);
     }
@@ -57,7 +80,10 @@ const Gamification: React.FC = () => {
     haptics.medium();
     setIsRolling(true);
     setDiceResult(null);
-    const vInterval = setInterval(() => { haptics.selection(); if (settings.soundsEnabled) soundService.playDiceTick(); }, 120);
+    const vInterval = setInterval(() => {
+      haptics.selection();
+      if (settings.soundsEnabled) soundService.playDiceTick();
+    }, 120);
     setTimeout(() => {
       clearInterval(vInterval);
       const result = Math.floor(Math.random() * 6) + 1;
@@ -83,382 +109,644 @@ const Gamification: React.FC = () => {
     }
   };
 
-  const renderRewardIcon = (iconName?: string, size = 24, padding = "p-4") => {
-    let IconComp = Gift;
-    switch (iconName) {
-      case 'Scissors': IconComp = Scissors; break;
-      case 'ShieldCheck': IconComp = ShieldCheck; break;
-      case 'Zap': IconComp = Zap; break;
-      case 'Music': IconComp = Music; break;
-      case 'BookOpen': IconComp = BookOpen; break;
-      case 'Coffee': IconComp = Coffee; break;
-      default: IconComp = Sparkles;
-    }
-    return <div className={`relative ${padding} rounded-2xl bg-slate-800/50 backdrop-blur-md border border-white/10 shadow-lg text-white flex items-center justify-center`}><IconComp size={size} /></div>;
+  const modalContent = {
+    dice: {
+      icon: <Dice1 size={32} color="#818cf8" />,
+      title: 'Dado del Destino',
+      subtitle: 'Sistema de Invocación',
+      rules: [
+        {
+          icon: <CheckCircle2 size={18} color="#34d399" />,
+          title: 'Requisito de Hábito',
+          desc: 'El dado solo puede ser invocado una vez al día, DESPUÉS de registrar tu hábito.',
+        },
+        {
+          icon: <Sparkles size={18} color="#fbbf24" />,
+          title: 'Jackpot del 6',
+          desc: 'Si obtienes un 6, además del premio especial, recibes +3 puntos de Maná extra.',
+        },
+        {
+          icon: <InfinityIcon size={18} color="#818cf8" />,
+          title: 'Personalización',
+          desc: 'Puedes ajustar los premios que otorga cada número del dado en la sección de Ajustes.',
+        },
+      ],
+    },
+    inventory: {
+      icon: <LayoutGrid size={32} color="#818cf8" />,
+      title: 'Inventario Élite',
+      subtitle: 'Economía de Identidad',
+      rules: [
+        {
+          icon: <Coins size={18} color="#fbbf24" />,
+          title: 'Cosecha de Maná',
+          desc: 'Obtienes Maná mediante check-ins y misiones diarias. Los modos de dificultad multiplican tu ganancia.',
+        },
+        {
+          icon: <ShieldCheck size={18} color="#34d399" />,
+          title: 'Protección Automática',
+          desc: "El 'Protector de Racha' se activa solo si olvidas un día. Es tu red de seguridad definitiva.",
+        },
+        {
+          icon: <Sparkles size={18} color="#818cf8" />,
+          title: 'Tipos de Items',
+          desc: 'Instantáneos (alivio inmediato), Experiencias (contenido exclusivo) y Tratamientos (recompensas físicas).',
+        },
+      ],
+    },
+    mana: {
+      icon: <Zap size={32} color="#818cf8" />,
+      title: 'Energía de Maná',
+      subtitle: 'Recurso de Transformación',
+      rules: [
+        {
+          icon: <Sparkles size={18} color="#818cf8" />,
+          title: 'Origen',
+          desc: 'El Maná es la representación de tu energía de voluntad convertida en recurso digital.',
+        },
+        {
+          icon: <Coins size={18} color="#fbbf24" />,
+          title: 'Acumulación',
+          desc: 'Obtienes Maná por cada check-in diario, sin importar si es la versión completa, de 2 minutos o EMD.',
+        },
+        {
+          icon: <ShoppingBag size={18} color="#22d3ee" />,
+          title: 'Utilidad',
+          desc: 'Gasta tu Maná en el Bazar para obtener protecciones de racha o premios que refuercen tu nueva identidad.',
+        },
+      ],
+    },
   };
 
-  const renderInfoModal = () => {
-    if (!infoModal) return null;
-    
-    const modalContent = {
-      dice: {
-        icon: <Dice1 className="text-indigo-400" size={32} />,
-        title: "Dado del Destino",
-        subtitle: "Sistema de Invocación",
-        rules: [
-          { icon: <CheckCircle2 size={18} className="text-emerald-400" />, title: "Requisito de Hábito", desc: "El dado solo puede ser invocado una vez al día, DESPUÉS de registrar tu hábito." },
-          { icon: <Sparkles size={18} className="text-amber-400" />, title: "Jackpot del 6", desc: "Si obtienes un 6, además del premio especial, recibes +3 puntos de Maná extra." },
-          { icon: <InfinityIcon size={18} className="text-indigo-400" />, title: "Personalización", desc: "Puedes ajustar los premios que otorga cada número del dado en la sección de Ajustes." }
-        ]
-      },
-      inventory: {
-        icon: <LayoutGrid className="text-indigo-400" size={32} />,
-        title: "Inventario Élite",
-        subtitle: "Economía de Identidad",
-        rules: [
-          { icon: <Coins size={18} className="text-amber-400" />, title: "Cosecha de Maná", desc: "Obtienes Maná mediante check-ins y misiones diarias. Los modos de dificultad multiplican tu ganancia." },
-          { icon: <ShieldCheck size={18} className="text-emerald-400" />, title: "Protección Automática", desc: "El 'Protector de Racha' se activa solo si olvidas un día. Es tu red de seguridad definitiva." },
-          { icon: <Sparkles size={18} className="text-indigo-400" />, title: "Tipos de Items", desc: "Instantáneos (alivio inmediato), Experiencias (contenido exclusivo) y Tratamientos (recompensas físicas)." }
-        ]
-      },
-      mana: {
-        icon: <ZapIcon className="text-indigo-400" size={32} />,
-        title: "Energía de Maná",
-        subtitle: "Recurso de Transformación",
-        rules: [
-          { icon: <Sparkles size={18} className="text-indigo-400" />, title: "Origen", desc: "El Maná es la representación de tu energía de voluntad convertida en recurso digital." },
-          { icon: <Coins size={18} className="text-amber-400" />, title: "Acumulación", desc: "Obtienes Maná por cada check-in diario, sin importar si es la versión completa, de 2 minutos o EMD. El compromiso diario es lo que realmente genera energía." },
-          { icon: <ShoppingBag size={18} className="text-cyan-400" />, title: "Utilidad", desc: "Gasta tu Maná en el Bazar para obtener protecciones de racha o premios que refuercen tu nueva identidad." }
-        ]
-      }
-    };
-
-    const modalData = modalContent[infoModal];
-
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/85 backdrop-blur-2xl animate-in fade-in duration-300">
-        <div className="bg-[#020617] border border-white/10 rounded-[3.5rem] w-full max-w-sm p-8 shadow-2xl animate-in zoom-in duration-500 relative">
-          <button onClick={() => setInfoModal(null)} className="absolute top-6 right-6 p-2 text-slate-500 hover:text-white"><X size={20} /></button>
-          <div className="flex flex-col space-y-8">
-            <div className="flex flex-col items-center text-center space-y-3">
-              <div className="p-4 bg-white/5 rounded-3xl border border-white/5">{modalData.icon}</div>
-              <h3 className="text-2xl font-black text-white uppercase tracking-tighter">{modalData.title}</h3>
-              <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em]">{modalData.subtitle}</p>
-            </div>
-            <div className="space-y-6">
-              {modalData.rules.map((rule, i) => (
-                <div key={i} className="flex space-x-4">
-                  <div className="mt-1 flex-shrink-0">{rule.icon}</div>
-                  <div className="flex-1">
-                    <p className="text-xs font-black text-white uppercase tracking-tight mb-1">{rule.title}</p>
-                    <p className="text-[10px] text-slate-400 font-medium leading-relaxed">{rule.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => setInfoModal(null)} className="w-full bg-white/5 text-white font-black py-4 rounded-2xl uppercase tracking-widest text-[10px] border border-white/10">Cerrar</button>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const activeModal = infoModal ? modalContent[infoModal] : null;
 
   return (
-    <div className="p-6 space-y-12 animate-in fade-in slide-in-from-left-8 duration-700 pb-24">
-      {/* Header Estilizado */}
-      <div className="flex items-center space-x-3 px-1">
-        <div className="p-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl shadow-inner text-indigo-600 dark:text-indigo-400">
-           <ShoppingBag size={24} />
-        </div>
-        <div>
-          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white leading-none">Bazar</h2>
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Intercambio de Voluntad</p>
-        </div>
-      </div>
+    <Layout>
+      <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 96, gap: 48 }}>
+        <View className="flex-row items-center px-1">
+          <View className="p-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl mr-3">
+            <ShoppingBag size={24} color="#818cf8" />
+          </View>
+          <View>
+            <Text className="text-2xl font-black text-white" style={{ letterSpacing: -0.5 }}>
+              Bazar
+            </Text>
+            <Text className="text-[10px] text-slate-500 font-bold uppercase mt-1" style={{ letterSpacing: 2 }}>
+              Intercambio de Voluntad
+            </Text>
+          </View>
+        </View>
 
-      <div className="relative flex flex-col items-center justify-center py-10">
-        {/* Espiral de energía exterior Mejorada */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-visible">
-          {/* Espiral Indigo Principal */}
-          <svg className="w-80 h-80 animate-[spin_12s_linear_infinite] opacity-30" viewBox="0 0 100 100">
-            <defs>
-              <linearGradient id="spiral-grad-indigo" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#6366f1" stopOpacity="0" />
-                <stop offset="50%" stopColor="#818cf8" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#c084fc" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path 
-              d="M50,50 Q70,20 90,50 T50,80 T10,50 T50,20" 
-              fill="none" 
-              stroke="url(#spiral-grad-indigo)" 
-              strokeWidth="0.8" 
-              className="animate-[pulse_4s_ease-in-out_infinite]"
-            />
-            <circle cx="50" cy="50" r="42" fill="none" stroke="url(#spiral-grad-indigo)" strokeWidth="0.15" strokeDasharray="2,6" />
-          </svg>
+        {/* Maná Circle */}
+        <View style={{ position: 'relative', alignItems: 'center', paddingVertical: 40 }}>
+          <Pressable
+            onPress={() => {
+              haptics.selection();
+              setInfoModal('mana');
+            }}
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 40,
+              padding: 12,
+              backgroundColor: 'rgba(255,255,255,0.05)',
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.05)',
+              borderRadius: 16,
+              zIndex: 20,
+            }}
+          >
+            <Info size={20} color="#64748b" />
+          </Pressable>
 
-          {/* Espiral Cian Secundaria (Contraste) */}
-          <svg className="absolute w-64 h-64 animate-[spin_8s_linear_infinite_reverse] opacity-40" viewBox="0 0 100 100">
-            <defs>
-              <linearGradient id="spiral-grad-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#06b6d4" stopOpacity="0" />
-                <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.9" />
-                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path 
-              d="M50,50 C65,35 85,50 50,85 C15,50 35,35 50,50" 
-              fill="none" 
-              stroke="url(#spiral-grad-cyan)" 
-              strokeWidth="0.6" 
-              className="animate-[pulse_3s_ease-in-out_infinite]"
-            />
-            {/* Partículas orbitales cian */}
-            <circle cx="50" cy="15" r="1.5" className="fill-cyan-400 animate-pulse" />
-            <circle cx="85" cy="50" r="1" className="fill-cyan-300 animate-pulse" />
-            <circle cx="50" cy="85" r="1.2" className="fill-cyan-400 animate-pulse" />
-            <circle cx="15" cy="50" r="1" className="fill-cyan-300 animate-pulse" />
-          </svg>
-
-          {/* Anillos de pulsación */}
-          <div className="absolute w-64 h-64 rounded-full border border-indigo-500/10 animate-[ping_5s_linear_infinite]"></div>
-          <div className="absolute w-72 h-72 rounded-full border border-cyan-500/5 animate-[ping_7s_linear_infinite_reverse]"></div>
-        </div>
-
-        {/* Botón de Información */}
-        <button 
-          onClick={() => { haptics.selection(); setInfoModal('mana'); }}
-          className="absolute top-0 right-10 p-3 bg-white/5 hover:bg-indigo-500/10 border border-white/5 rounded-2xl text-slate-500 hover:text-cyan-400 transition-all z-20 shadow-lg group"
-        >
-          <Info size={20} className="group-hover:scale-110 transition-transform" />
-        </button>
-        
-        <div className="relative w-48 h-48 rounded-full bg-gradient-to-br from-[#1e1b4b] to-black border border-white/10 shadow-[0_0_70px_rgba(6,182,212,0.3),0_0_50px_rgba(79,70,229,0.3)] flex flex-col items-center justify-center overflow-hidden group">
-          {/* Brillo dinámico interno cian e indigo */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-cyan-500/10 to-indigo-500/5 rotate-45 animate-[pulse_4s_ease-in-out_infinite]"></div>
-          
-          <span className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-cyan-100 z-10 drop-shadow-[0_0_15px_rgba(6,182,212,0.4)]">{rewards.availablePoints}</span>
-          <span className="text-xs font-black text-indigo-400/80 uppercase tracking-[0.3em] mt-[-5px] z-10 flex items-center space-x-1">
-             <span>Maná</span>
-             <div className="w-1 h-1 bg-cyan-400 rounded-full animate-pulse"></div>
-          </span>
-          
-          {/* Rayo de energía diagonal que cruza */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent rotate-45 group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
-        </div>
-
-        {/* Partículas de energía que "flotan" hacia arriba con colores mixtos */}
-        <div className="absolute -bottom-6 w-full flex justify-around opacity-60">
-           <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.2s] shadow-[0_0_8px_#818cf8]"></div>
-           <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce [animation-delay:0.5s] shadow-[0_0_8px_#22d3ee]"></div>
-           <div className="w-1 h-1 bg-purple-400 rounded-full animate-bounce [animation-delay:0.8s] shadow-[0_0_8px_#c084fc]"></div>
-           <div className="w-1.5 h-1.5 bg-cyan-300 rounded-full animate-bounce [animation-delay:0.4s] shadow-[0_0_8px_#67e8f9]"></div>
-        </div>
-      </div>
-
-      {/* Dado del destino */}
-      <section className="space-y-6 relative">
-        <button onClick={() => { haptics.selection(); setInfoModal('dice'); }} className="absolute top-0 right-4 p-2 text-slate-500 hover:text-white z-20"><Info size={18} /></button>
-        <div className="flex items-center space-x-2 px-4"><Coins size={14} className="text-indigo-500" /><h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Mecánica de Suerte</h3></div>
-        <div className={`relative p-10 rounded-[4rem] group transition-all duration-500 ${canRoll || isRolling ? 'bg-gradient-to-br from-indigo-600 to-indigo-900 shadow-xl' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 opacity-90'}`}>
-          <div className="relative z-10 flex flex-col items-center space-y-8">
-            <div className="text-center space-y-2">
-              <h3 className={`font-black text-2xl tracking-tighter uppercase ${canRoll || isRolling ? 'text-white' : 'text-slate-900 dark:text-white'}`}>Dado del destino</h3>
-            </div>
-            
-            <div className={`w-32 h-32 bg-white rounded-[2.8rem] flex items-center justify-center text-6xl text-indigo-700 transition-all shadow-2xl ${isRolling ? 'animate-bounce' : !canRoll && !effectiveDiceResult ? 'grayscale opacity-40' : ''}`}>
-              {!habitCompleted ? <Lock size={44} /> : isRolling ? <Dice5 className="animate-spin" /> : effectiveDiceResult || <Dice5 />}
-            </div>
-
-            {effectiveDiceResult && !isRolling && (
-              <div className="text-center animate-in fade-in zoom-in duration-500 py-2">
-                <p className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-[0.3em] mb-1">Recompensa Activa</p>
-                <p className={`font-black text-3xl uppercase tracking-tighter ${canRoll || isRolling ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
-                  {diceRewards.find(r => r.diceNumber === effectiveDiceResult)?.title}
-                </p>
-                {effectiveDiceResult === 6 && (
-                  <p className="text-amber-400 text-[10px] font-bold uppercase tracking-widest mt-2 flex items-center justify-center space-x-1">
-                    <Sparkles size={12} />
-                    <span>+3 Puntos de Maná Extra</span>
-                    <Sparkles size={12} />
-                  </p>
-                )}
-              </div>
-            )}
-
-            <button 
-              onClick={handleRollDice} 
-              disabled={isRolling || !canRoll} 
-              className={`w-full py-6 font-black rounded-[2rem] shadow-2xl transition-all uppercase tracking-[0.25em] text-[10px] px-4 ${canRoll ? 'bg-white text-indigo-700 hover:scale-[1.02] active:scale-95' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}
+          <LinearGradient
+            colors={['#1e1b4b', '#000000']}
+            style={{
+              width: 192,
+              height: 192,
+              borderRadius: 96,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.1)',
+            }}
+          >
+            <Text className="text-7xl font-black text-white" style={{ letterSpacing: -3 }}>
+              {rewards.availablePoints}
+            </Text>
+            <Text
+              className="text-xs font-black text-indigo-400 uppercase"
+              style={{ letterSpacing: 4, marginTop: -5 }}
             >
-              {isRolling ? 'Invocando...' : alreadyRolled && effectiveDiceResult ? (
-                <span className="flex items-center justify-center space-x-2">
-                  <span>{diceRewards.find(r => r.diceNumber === effectiveDiceResult)?.title}</span>
-                </span>
-              ) : 'Lanzar Dado'}
-            </button>
-          </div>
-        </div>
+              Maná
+            </Text>
+          </LinearGradient>
+        </View>
 
-        {/* Lista de Premios del Dado */}
-        <div className="px-4 animate-in fade-in slide-in-from-top-4 duration-700">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <Dices size={12} className="text-indigo-500" />
-            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Premios del Dado del Destino</span>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {diceRewards.map((reward) => (
-              <div key={reward.id} className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 p-3 rounded-2xl flex flex-col items-center text-center transition-all hover:scale-105 shadow-sm">
-                <span className="text-xs font-black text-indigo-500 mb-1">{reward.diceNumber}</span>
-                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 leading-tight line-clamp-2">{reward.title}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        {/* Dado del Destino */}
+        <View style={{ position: 'relative' }}>
+          <Pressable
+            onPress={() => {
+              haptics.selection();
+              setInfoModal('dice');
+            }}
+            style={{ position: 'absolute', top: 0, right: 16, padding: 8, zIndex: 20 }}
+          >
+            <Info size={18} color="#64748b" />
+          </Pressable>
+          <View className="flex-row items-center mb-6 px-4">
+            <Coins size={14} color="#6366f1" />
+            <Text className="text-[10px] font-black uppercase text-slate-500 ml-2" style={{ letterSpacing: 4 }}>
+              Mecánica de Suerte
+            </Text>
+          </View>
 
-      {/* Catálogo */}
-      <section className="space-y-8 relative">
-        <button onClick={() => { haptics.selection(); setInfoModal('inventory'); }} className="absolute top-0 right-4 p-2 text-slate-500 hover:text-white z-20"><Info size={18} /></button>
-        <div className="flex items-center justify-between px-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-            <h3 className="font-black text-[11px] text-slate-500 uppercase tracking-[0.3em]">Inventario de Élite</h3>
-          </div>
-          {rewards.streakProtectors > 0 && (
-            <div className="flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
-              <ShieldCheck size={12} className="text-emerald-500" />
-              <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                {rewards.streakProtectors} {rewards.streakProtectors === 1 ? 'Protector' : 'Protectores'}
-              </span>
-            </div>
+          {canRoll || isRolling ? (
+            <LinearGradient colors={['#4f46e5', '#1e1b4b']} style={{ padding: 40, borderRadius: 64 }}>
+              <View className="items-center" style={{ gap: 32 }}>
+                <Text
+                  className="text-2xl font-black text-white uppercase text-center"
+                  style={{ letterSpacing: -0.5 }}
+                >
+                  Dado del destino
+                </Text>
+                <View
+                  className="bg-white items-center justify-center"
+                  style={{ width: 128, height: 128, borderRadius: 45 }}
+                >
+                  {!habitCompleted ? (
+                    <Lock size={44} color="#4338ca" />
+                  ) : isRolling ? (
+                    <Dice5 size={60} color="#4338ca" />
+                  ) : effectiveDiceResult ? (
+                    <Text className="text-indigo-700 font-black" style={{ fontSize: 60 }}>
+                      {effectiveDiceResult}
+                    </Text>
+                  ) : (
+                    <Dice5 size={60} color="#4338ca" />
+                  )}
+                </View>
+                {effectiveDiceResult && !isRolling && (
+                  <View className="items-center">
+                    <Text
+                      className="text-[10px] font-black text-indigo-400 uppercase mb-1"
+                      style={{ letterSpacing: 3 }}
+                    >
+                      Recompensa Activa
+                    </Text>
+                    <Text
+                      className="font-black text-3xl text-white uppercase text-center"
+                      style={{ letterSpacing: -1 }}
+                    >
+                      {diceRewards.find((r) => r.diceNumber === effectiveDiceResult)?.title}
+                    </Text>
+                    {effectiveDiceResult === 6 && (
+                      <Text
+                        className="text-amber-400 text-[10px] font-bold uppercase mt-2"
+                        style={{ letterSpacing: 2 }}
+                      >
+                        ✨ +3 Puntos de Maná Extra ✨
+                      </Text>
+                    )}
+                  </View>
+                )}
+                <Pressable
+                  onPress={handleRollDice}
+                  disabled={isRolling || !canRoll}
+                  className="w-full py-6 bg-white rounded-[2rem]"
+                  style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.95 : 1 }] })}
+                >
+                  <Text
+                    className="text-indigo-700 font-black text-center uppercase text-[10px]"
+                    style={{ letterSpacing: 3 }}
+                  >
+                    {isRolling
+                      ? 'Invocando...'
+                      : alreadyRolled && effectiveDiceResult
+                      ? diceRewards.find((r) => r.diceNumber === effectiveDiceResult)?.title || 'Lanzar Dado'
+                      : 'Lanzar Dado'}
+                  </Text>
+                </Pressable>
+              </View>
+            </LinearGradient>
+          ) : (
+            <View
+              className="bg-slate-900 border border-white/5 p-10"
+              style={{ borderRadius: 64, opacity: 0.9 }}
+            >
+              <View className="items-center" style={{ gap: 32 }}>
+                <Text
+                  className="text-2xl font-black text-white uppercase text-center"
+                  style={{ letterSpacing: -0.5 }}
+                >
+                  Dado del destino
+                </Text>
+                <View
+                  className="bg-white items-center justify-center"
+                  style={{ width: 128, height: 128, borderRadius: 45, opacity: 0.4 }}
+                >
+                  {!habitCompleted ? (
+                    <Lock size={44} color="#4338ca" />
+                  ) : effectiveDiceResult ? (
+                    <Text className="text-indigo-700 font-black" style={{ fontSize: 60 }}>
+                      {effectiveDiceResult}
+                    </Text>
+                  ) : (
+                    <Dice5 size={60} color="#4338ca" />
+                  )}
+                </View>
+                {effectiveDiceResult && (
+                  <View className="items-center">
+                    <Text
+                      className="text-[10px] font-black text-indigo-400 uppercase mb-1"
+                      style={{ letterSpacing: 3 }}
+                    >
+                      Recompensa Activa
+                    </Text>
+                    <Text
+                      className="font-black text-3xl text-white uppercase text-center"
+                      style={{ letterSpacing: -1 }}
+                    >
+                      {diceRewards.find((r) => r.diceNumber === effectiveDiceResult)?.title}
+                    </Text>
+                  </View>
+                )}
+                <View className="w-full py-6 bg-slate-800 rounded-[2rem]">
+                  <Text
+                    className="text-slate-400 font-black text-center uppercase text-[10px]"
+                    style={{ letterSpacing: 3 }}
+                  >
+                    {!habitCompleted ? 'Completa tu hábito primero' : 'Ya lanzaste hoy'}
+                  </Text>
+                </View>
+              </View>
+            </View>
           )}
-        </div>
-        <div className="space-y-6">
-          {rewards.rewardsCatalog.map((reward) => {
-            const isAffordable = rewards.availablePoints >= reward.cost;
-            return (
-              <div key={reward.id} className={`group p-6 rounded-[2.8rem] border flex items-center justify-between ${isAffordable ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10' : 'bg-slate-50 dark:bg-slate-900/30 opacity-80'}`}>
-                <div className="flex items-center space-x-5">{renderRewardIcon(reward.icon)}<div><h4 className="text-base font-black tracking-tight mb-0.5">{reward.name}</h4><p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none">{reward.description}</p></div></div>
-                <button onClick={() => handleRedeem(reward)} disabled={!isAffordable} className={`px-6 py-3.5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest ${isAffordable ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-lg' : 'bg-slate-200 dark:bg-slate-800/50 text-slate-400'}`}>{reward.cost} MANÁ</button>
-              </div>
-            );
-          })}
-        </div>
-      </section>
 
-      {/* Historial de Compras */}
-      {rewards.purchaseHistory && rewards.purchaseHistory.length > 0 && (
-        <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="flex items-center space-x-3 px-4">
-            <History size={14} className="text-slate-400" />
-            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Historial de Canjes</h3>
-          </div>
-          
-          <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 rounded-[2.5rem] overflow-hidden">
-            <div className="divide-y divide-slate-100 dark:divide-white/5">
-              {rewards.purchaseHistory.slice(0, 5).map((transaction) => {
-                const reward = rewards.rewardsCatalog.find(r => r.id === transaction.rewardId);
-                const date = new Date(transaction.date).toLocaleDateString('es-ES', { 
-                  day: '2-digit', 
+          {/* Dice rewards grid */}
+          <View className="px-4 mt-6">
+            <View className="flex-row items-center justify-center mb-4">
+              <Dices size={12} color="#6366f1" />
+              <Text
+                className="text-[8px] font-black uppercase text-slate-500 ml-2"
+                style={{ letterSpacing: 2 }}
+              >
+                Premios del Dado del Destino
+              </Text>
+            </View>
+            <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+              {diceRewards.map((reward) => (
+                <View
+                  key={reward.id}
+                  className="bg-white/5 border border-white/5 p-3 rounded-2xl items-center"
+                  style={{ width: '31%' }}
+                >
+                  <Text className="text-xs font-black text-indigo-500 mb-1">{reward.diceNumber}</Text>
+                  <Text
+                    className="text-[9px] font-bold text-slate-300 text-center"
+                    style={{ lineHeight: 11 }}
+                    numberOfLines={2}
+                  >
+                    {reward.title}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {/* Inventario */}
+        <View style={{ position: 'relative' }}>
+          <Pressable
+            onPress={() => {
+              haptics.selection();
+              setInfoModal('inventory');
+            }}
+            style={{ position: 'absolute', top: 0, right: 16, padding: 8, zIndex: 20 }}
+          >
+            <Info size={18} color="#64748b" />
+          </Pressable>
+
+          <View className="flex-row items-center justify-between px-4 mb-6">
+            <View className="flex-row items-center">
+              <View
+                style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#6366f1', marginRight: 12 }}
+              />
+              <Text className="font-black text-[11px] text-slate-500 uppercase" style={{ letterSpacing: 3 }}>
+                Inventario de Élite
+              </Text>
+            </View>
+            {rewards.streakProtectors > 0 && (
+              <View className="flex-row items-center bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
+                <ShieldCheck size={12} color="#10b981" />
+                <Text
+                  className="text-[10px] font-black text-emerald-400 uppercase ml-2"
+                  style={{ letterSpacing: 2 }}
+                >
+                  {rewards.streakProtectors} {rewards.streakProtectors === 1 ? 'Protector' : 'Protectores'}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <View style={{ gap: 24 }}>
+            {rewards.rewardsCatalog.map((reward) => {
+              const isAffordable = rewards.availablePoints >= reward.cost;
+              return (
+                <View
+                  key={reward.id}
+                  className={`p-6 flex-row items-center justify-between border ${
+                    isAffordable ? 'bg-slate-900 border-white/10' : 'bg-slate-900/30 border-white/5'
+                  }`}
+                  style={{ borderRadius: 45, opacity: isAffordable ? 1 : 0.8 }}
+                >
+                  <View className="flex-row items-center flex-1">
+                    <View className="p-4 rounded-2xl bg-slate-800/50 border border-white/10 mr-4">
+                      {renderRewardIcon(reward.icon, 24)}
+                    </View>
+                    <View className="flex-1">
+                      <Text
+                        className="text-base font-black text-white mb-0.5"
+                        style={{ letterSpacing: -0.3 }}
+                        numberOfLines={1}
+                      >
+                        {reward.name}
+                      </Text>
+                      <Text
+                        className="text-[10px] text-slate-500 font-bold uppercase"
+                        style={{ letterSpacing: 2, lineHeight: 12 }}
+                        numberOfLines={2}
+                      >
+                        {reward.description}
+                      </Text>
+                    </View>
+                  </View>
+                  <Pressable
+                    onPress={() => handleRedeem(reward)}
+                    disabled={!isAffordable}
+                    className={`px-6 py-3.5 rounded-[1.5rem] ${
+                      isAffordable ? 'bg-white' : 'bg-slate-800/50'
+                    }`}
+                  >
+                    <Text
+                      className={`text-[10px] font-black uppercase ${
+                        isAffordable ? 'text-slate-950' : 'text-slate-400'
+                      }`}
+                      style={{ letterSpacing: 2 }}
+                    >
+                      {reward.cost} MANÁ
+                    </Text>
+                  </Pressable>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Purchase History */}
+        {rewards.purchaseHistory && rewards.purchaseHistory.length > 0 && (
+          <View>
+            <View className="flex-row items-center mb-6 px-4">
+              <History size={14} color="#94a3b8" />
+              <Text className="text-[10px] font-black uppercase text-slate-500 ml-3" style={{ letterSpacing: 4 }}>
+                Historial de Canjes
+              </Text>
+            </View>
+
+            <View className="bg-slate-900/50 border border-white/5 overflow-hidden" style={{ borderRadius: 40 }}>
+              {rewards.purchaseHistory.slice(0, 5).map((transaction, i, arr) => {
+                const reward = rewards.rewardsCatalog.find((r) => r.id === transaction.rewardId);
+                const date = new Date(transaction.date).toLocaleDateString('es-ES', {
+                  day: '2-digit',
                   month: 'short',
                   hour: '2-digit',
-                  minute: '2-digit'
+                  minute: '2-digit',
                 });
-                
                 return (
-                  <div key={transaction.id} className="p-5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                    <div className="flex items-center space-x-4">
-                      <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500">
-                        {reward ? renderRewardIcon(reward.icon, 16, "p-0") : <Gift size={16} />}
-                      </div>
-                      <div>
-                        <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                  <View
+                    key={transaction.id}
+                    className="p-5 flex-row items-center justify-between"
+                    style={{
+                      borderBottomWidth: i < arr.length - 1 ? 1 : 0,
+                      borderBottomColor: 'rgba(255,255,255,0.05)',
+                    }}
+                  >
+                    <View className="flex-row items-center flex-1">
+                      <View className="p-2 bg-slate-800 rounded-xl mr-4">
+                        {renderRewardIcon(reward?.icon, 16, '#94a3b8')}
+                      </View>
+                      <View className="flex-1">
+                        <Text
+                          className="text-xs font-black text-white uppercase"
+                          style={{ letterSpacing: -0.3 }}
+                          numberOfLines={1}
+                        >
                           {reward?.name || 'Recompensa Desconocida'}
-                        </p>
-                        <p className="text-[10px] text-slate-500 font-medium">
-                          {date}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-black text-indigo-500 uppercase tracking-wider">
-                        -{transaction.pointsSpent} MANÁ
-                      </p>
-                    </div>
-                  </div>
+                        </Text>
+                        <Text className="text-[10px] text-slate-500 font-medium">{date}</Text>
+                      </View>
+                    </View>
+                    <Text
+                      className="text-[10px] font-black text-indigo-500 uppercase"
+                      style={{ letterSpacing: 2 }}
+                    >
+                      -{transaction.pointsSpent} MANÁ
+                    </Text>
+                  </View>
                 );
               })}
-            </div>
-            {rewards.purchaseHistory.length > 5 && (
-              <div className="p-4 text-center border-t border-slate-100 dark:border-white/5">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                  Y {rewards.purchaseHistory.length - 5} canjes más...
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {purchasedReward && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/85 backdrop-blur-2xl animate-in fade-in duration-300">
-          <div className="bg-slate-900 border border-white/10 rounded-[3.5rem] w-full max-w-sm p-8 shadow-2xl text-center">
-            <button onClick={() => setPurchasedReward(null)} className="absolute top-6 right-6 p-2 text-slate-500"><X size={20} /></button>
-            <div className="flex flex-col items-center space-y-6 pt-4">
-              {renderRewardIcon(purchasedReward.icon, 48, "p-8")}
-              <h3 className="text-3xl font-black text-white tracking-tighter">¡Felicidades, {heroTerm}!</h3>
-              <button onClick={() => setPurchasedReward(null)} className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] uppercase tracking-widest text-[10px]">Continuar Misión</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showDiceRewardModal && diceResult && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/90 backdrop-blur-3xl animate-in fade-in duration-500">
-          <div className="bg-[#020617] border border-white/10 rounded-[4rem] w-full max-w-sm p-10 shadow-2xl text-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none"></div>
-            <button onClick={() => setShowDiceRewardModal(false)} className="absolute top-8 right-8 p-2 text-slate-500 hover:text-white z-20"><X size={20} /></button>
-            
-            <div className="relative z-10 flex flex-col items-center space-y-8">
-              <div className="p-6 bg-white rounded-[2.5rem] shadow-[0_0_40px_rgba(99,102,241,0.4)] animate-bounce">
-                <div className="text-6xl text-indigo-700 font-black">
-                  {diceResult}
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em]">Recompensa del Destino</p>
-                <h3 className="text-4xl font-black text-white tracking-tighter uppercase leading-none">
-                  {diceRewards.find(r => r.diceNumber === diceResult)?.title}
-                </h3>
-                <p className="text-slate-400 text-xs font-medium px-4">
-                  {diceRewards.find(r => r.diceNumber === diceResult)?.description || 'Has invocado un premio especial por tu disciplina diaria.'}
-                </p>
-              </div>
-
-              {diceResult === 6 && (
-                <div className="bg-amber-500/10 border border-amber-500/20 px-6 py-3 rounded-2xl flex items-center space-x-3">
-                  <Sparkles className="text-amber-400" size={18} />
-                  <span className="text-amber-400 text-[10px] font-black uppercase tracking-widest">+3 Puntos de Maná Extra</span>
-                  <Sparkles className="text-amber-400" size={18} />
-                </div>
+              {rewards.purchaseHistory.length > 5 && (
+                <View className="p-4 items-center" style={{ borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' }}>
+                  <Text className="text-[10px] text-slate-400 font-bold uppercase" style={{ letterSpacing: 2 }}>
+                    Y {rewards.purchaseHistory.length - 5} canjes más...
+                  </Text>
+                </View>
               )}
+            </View>
+          </View>
+        )}
+      </ScrollView>
 
-              <button 
-                onClick={() => setShowDiceRewardModal(false)} 
-                className="w-full bg-white text-indigo-950 font-black py-6 rounded-[2rem] uppercase tracking-widest text-[10px] shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+      {/* Info modal */}
+      <Modal
+        transparent
+        visible={!!infoModal}
+        animationType="fade"
+        onRequestClose={() => setInfoModal(null)}
+      >
+        <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: 'rgba(0,0,0,0.85)' }}>
+          {activeModal && (
+            <View
+              className="bg-[#020617] border border-white/10 w-full p-8"
+              style={{ maxWidth: 384, borderRadius: 56 }}
+            >
+              <Pressable
+                onPress={() => setInfoModal(null)}
+                style={{ position: 'absolute', top: 24, right: 24, padding: 8 }}
               >
-                Reclamar Recompensa
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                <X size={20} color="#64748b" />
+              </Pressable>
+              <View className="items-center mb-8 pt-6">
+                <View className="p-4 bg-white/5 rounded-3xl border border-white/5 mb-3">
+                  {activeModal.icon}
+                </View>
+                <Text
+                  className="text-2xl font-black text-white uppercase text-center"
+                  style={{ letterSpacing: -0.5 }}
+                >
+                  {activeModal.title}
+                </Text>
+                <Text
+                  className="text-[10px] font-black text-indigo-400 uppercase mt-1"
+                  style={{ letterSpacing: 3 }}
+                >
+                  {activeModal.subtitle}
+                </Text>
+              </View>
+              <View style={{ gap: 24 }}>
+                {activeModal.rules.map((rule, i) => (
+                  <View key={i} className="flex-row">
+                    <View style={{ marginTop: 4, marginRight: 16 }}>{rule.icon}</View>
+                    <View className="flex-1">
+                      <Text className="text-xs font-black text-white uppercase mb-1">{rule.title}</Text>
+                      <Text className="text-[10px] text-slate-400 font-medium" style={{ lineHeight: 16 }}>
+                        {rule.desc}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+              <Pressable
+                onPress={() => setInfoModal(null)}
+                className="w-full bg-white/5 border border-white/10 py-4 rounded-2xl mt-8"
+              >
+                <Text
+                  className="text-white font-black text-center uppercase text-[10px]"
+                  style={{ letterSpacing: 2 }}
+                >
+                  Cerrar
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+      </Modal>
 
-      {renderInfoModal()}
-    </div>
+      {/* Purchase confirmation modal */}
+      <Modal
+        transparent
+        visible={!!purchasedReward}
+        animationType="fade"
+        onRequestClose={() => setPurchasedReward(null)}
+      >
+        <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: 'rgba(0,0,0,0.85)' }}>
+          {purchasedReward && (
+            <View
+              className="bg-slate-900 border border-white/10 w-full p-8 items-center"
+              style={{ maxWidth: 384, borderRadius: 56 }}
+            >
+              <Pressable
+                onPress={() => setPurchasedReward(null)}
+                style={{ position: 'absolute', top: 24, right: 24, padding: 8 }}
+              >
+                <X size={20} color="#64748b" />
+              </Pressable>
+              <View className="p-8 rounded-2xl bg-slate-800/50 border border-white/10 mb-6 mt-4">
+                {renderRewardIcon(purchasedReward.icon, 48)}
+              </View>
+              <Text
+                className="text-3xl font-black text-white text-center mb-6"
+                style={{ letterSpacing: -1 }}
+              >
+                ¡Felicidades, {heroTerm}!
+              </Text>
+              <Pressable
+                onPress={() => setPurchasedReward(null)}
+                className="w-full bg-indigo-600 py-5 rounded-[2rem]"
+              >
+                <Text
+                  className="text-white font-black text-center uppercase text-[10px]"
+                  style={{ letterSpacing: 2 }}
+                >
+                  Continuar Misión
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+      </Modal>
+
+      {/* Dice result modal */}
+      <Modal
+        transparent
+        visible={showDiceRewardModal && !!diceResult}
+        animationType="fade"
+        onRequestClose={() => setShowDiceRewardModal(false)}
+      >
+        <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: 'rgba(0,0,0,0.9)' }}>
+          {diceResult && (
+            <View
+              className="bg-[#020617] border border-white/10 w-full p-10 items-center"
+              style={{ maxWidth: 384, borderRadius: 64 }}
+            >
+              <Pressable
+                onPress={() => setShowDiceRewardModal(false)}
+                style={{ position: 'absolute', top: 32, right: 32, padding: 8, zIndex: 20 }}
+              >
+                <X size={20} color="#64748b" />
+              </Pressable>
+              <View
+                className="bg-white p-6 items-center justify-center"
+                style={{ borderRadius: 40, marginBottom: 32 }}
+              >
+                <Text className="text-indigo-700 font-black" style={{ fontSize: 60 }}>
+                  {diceResult}
+                </Text>
+              </View>
+              <Text
+                className="text-[10px] font-black text-indigo-400 uppercase mb-3"
+                style={{ letterSpacing: 4 }}
+              >
+                Recompensa del Destino
+              </Text>
+              <Text
+                className="text-4xl font-black text-white uppercase text-center mb-3"
+                style={{ letterSpacing: -1 }}
+              >
+                {diceRewards.find((r) => r.diceNumber === diceResult)?.title}
+              </Text>
+              <Text className="text-slate-400 text-xs text-center font-medium px-4 mb-6">
+                {diceRewards.find((r) => r.diceNumber === diceResult)?.description ||
+                  'Has invocado un premio especial por tu disciplina diaria.'}
+              </Text>
+              {diceResult === 6 && (
+                <View className="bg-amber-500/10 border border-amber-500/20 px-6 py-3 rounded-2xl flex-row items-center mb-6">
+                  <Sparkles size={18} color="#fbbf24" />
+                  <Text
+                    className="text-amber-400 text-[10px] font-black uppercase mx-3"
+                    style={{ letterSpacing: 2 }}
+                  >
+                    +3 Puntos de Maná Extra
+                  </Text>
+                  <Sparkles size={18} color="#fbbf24" />
+                </View>
+              )}
+              <Pressable
+                onPress={() => setShowDiceRewardModal(false)}
+                className="w-full bg-white py-6 rounded-[2rem]"
+              >
+                <Text
+                  className="text-indigo-950 font-black text-center uppercase text-[10px]"
+                  style={{ letterSpacing: 2 }}
+                >
+                  Reclamar Recompensa
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+      </Modal>
+    </Layout>
   );
 };
 
