@@ -1,65 +1,38 @@
-class SoundService {
-  private ctx: AudioContext | null = null;
+import { createAudioPlayer, type AudioPlayer } from 'expo-audio';
 
-  private initContext() {
-    if (!this.ctx) {
-      this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
+const sources = {
+  success: require('../assets/sounds/success.wav'),
+  taskComplete: require('../assets/sounds/taskComplete.wav'),
+  diceTick: require('../assets/sounds/diceTick.wav'),
+  diceResult: require('../assets/sounds/diceResult.wav'),
+  purchase: require('../assets/sounds/purchase.wav'),
+};
+
+type Key = keyof typeof sources;
+
+const players: Partial<Record<Key, AudioPlayer>> = {};
+
+function getPlayer(key: Key): AudioPlayer {
+  if (!players[key]) {
+    players[key] = createAudioPlayer(sources[key]);
   }
+  return players[key]!;
+}
 
-  private playTone(freq: number, type: OscillatorType, duration: number, volume: number = 0.1) {
-    this.initContext();
-    if (!this.ctx) return;
-
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-
-    gain.gain.setValueAtTime(volume, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
-
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-
-    osc.start();
-    osc.stop(this.ctx.currentTime + duration);
-  }
-
-  playSuccess() {
-    // Arpegio ascendente
-    this.playTone(440, 'sine', 0.5, 0.1);
-    setTimeout(() => this.playTone(554.37, 'sine', 0.5, 0.1), 100);
-    setTimeout(() => this.playTone(659.25, 'sine', 0.6, 0.1), 200);
-    setTimeout(() => this.playTone(880, 'sine', 0.8, 0.05), 300);
-  }
-
-  playTaskComplete() {
-    // Tono doble de confirmación
-    this.playTone(523.25, 'triangle', 0.3, 0.1);
-    setTimeout(() => this.playTone(783.99, 'triangle', 0.4, 0.1), 150);
-  }
-
-  playDiceTick() {
-    // Click percusivo seco
-    this.playTone(150, 'square', 0.05, 0.02);
-  }
-
-  playDiceResult() {
-    // Sonido de caída/revelación
-    this.playTone(392, 'sine', 0.5, 0.1);
-    setTimeout(() => this.playTone(523.25, 'sine', 0.8, 0.1), 150);
-  }
-
-  playPurchase() {
-    // Sonido metálico "Ka-ching"
-    this.playTone(987.77, 'sine', 0.4, 0.08);
-    setTimeout(() => this.playTone(1318.51, 'sine', 0.6, 0.05), 100);
+function play(key: Key) {
+  try {
+    const p = getPlayer(key);
+    p.seekTo(0);
+    p.play();
+  } catch {
+    // Sounds are secondary — never block UX on audio failures
   }
 }
 
-export const soundService = new SoundService();
+export const soundService = {
+  playSuccess: () => play('success'),
+  playTaskComplete: () => play('taskComplete'),
+  playDiceTick: () => play('diceTick'),
+  playDiceResult: () => play('diceResult'),
+  playPurchase: () => play('purchase'),
+};
