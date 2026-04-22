@@ -1,27 +1,22 @@
+import * as Haptics from 'expo-haptics';
 
 export const haptics = {
-  // Ultra light tap for selections
   selection: () => {
-    if ('vibrate' in navigator) navigator.vibrate(5);
+    Haptics.selectionAsync().catch(() => {});
   },
-  // Light feedback for minor actions
   light: () => {
-    if ('vibrate' in navigator) navigator.vibrate(15);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
   },
-  // Medium feedback for standard buttons
   medium: () => {
-    if ('vibrate' in navigator) navigator.vibrate(30);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
   },
-  // Heavy feedback for important actions (spending points)
   heavy: () => {
-    if ('vibrate' in navigator) navigator.vibrate(60);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
   },
-  // Success pattern (double pulse)
   success: () => {
-    if ('vibrate' in navigator) navigator.vibrate([10, 40, 10]);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   },
-  // Error/Warning pattern
   error: () => {
-    if ('vibrate' in navigator) navigator.vibrate([50, 50, 50]);
-  }
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+  },
 };
