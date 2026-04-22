@@ -9,6 +9,7 @@ import { HabitProvider } from './context/HabitContext';
 import HomeScreen from './screens/Home';
 import TasksScreen from './screens/Tasks';
 import SettingsScreen from './screens/Settings';
+import StatsScreen from './screens/Stats';
 
 const Tab = createBottomTabNavigator();
 
@@ -46,10 +47,9 @@ export default function App() {
           />
           <Tab.Screen
             name="Stats"
+            component={StatsScreen}
             options={{ tabBarIcon: ({ color, size }) => <BarChart3 size={size} color={color} /> }}
-          >
-            {() => <Placeholder name="Stats" />}
-          </Tab.Screen>
+          />
           <Tab.Screen
             name="Rewards"
             options={{ tabBarIcon: ({ color, size }) => <Gift size={size} color={color} /> }}
