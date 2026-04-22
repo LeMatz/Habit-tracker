@@ -1,68 +1,95 @@
-
 import React from 'react';
-import { Zap, Clock, CheckCircle2 } from 'lucide-react';
+import { View, Text, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Zap, Clock, CheckCircle2 } from 'lucide-react-native';
 import { HabitButtonType } from '../types';
 
 interface HabitButtonProps {
   type: HabitButtonType;
-  onClick: () => void;
+  onPress: () => void;
   disabled?: boolean;
   customLabel?: string;
 }
 
-export const HabitButton: React.FC<HabitButtonProps> = ({ type, onClick, disabled, customLabel }) => {
-  const configs = {
+type Config = {
+  gradient: [string, string];
+  icon: React.ReactNode;
+  text: string;
+  subtext: string;
+};
+
+export const HabitButton: React.FC<HabitButtonProps> = ({ type, onPress, disabled, customLabel }) => {
+  const configs: Record<HabitButtonType, Config> = {
     emergency: {
-      color: 'bg-orange-500',
-      gradient: 'from-orange-500 to-orange-700',
-      shadow: 'shadow-orange-500/20',
-      icon: <Zap size={28} />,
+      gradient: ['#f97316', '#c2410c'],
+      icon: <Zap size={28} color="#ffffff" />,
       text: customLabel || 'EMD',
-      subtext: 'Esfuerzo Mínimo Diario'
+      subtext: 'Esfuerzo Mínimo Diario',
     },
     twoMinutes: {
-      color: 'bg-indigo-500',
-      gradient: 'from-indigo-500 to-indigo-700',
-      shadow: 'shadow-indigo-500/20',
-      icon: <Clock size={28} />,
+      gradient: ['#6366f1', '#4338ca'],
+      icon: <Clock size={28} color="#ffffff" />,
       text: customLabel || '2 min',
-      subtext: '2 minutos'
+      subtext: '2 minutos',
     },
     complete: {
-      color: 'bg-cyan-500',
-      gradient: 'from-cyan-400 to-cyan-600',
-      shadow: 'shadow-cyan-500/20',
-      icon: <CheckCircle2 size={28} />,
+      gradient: ['#22d3ee', '#0891b2'],
+      icon: <CheckCircle2 size={28} color="#ffffff" />,
       text: customLabel || 'Total',
-      subtext: 'Check'
-    }
+      subtext: 'Check',
+    },
   };
 
   const config = configs[type];
 
   return (
-    <button
-      onClick={onClick}
+    <Pressable
+      onPress={onPress}
       disabled={disabled}
-      className={`flex flex-col items-center space-y-4 group ${disabled ? 'opacity-20 grayscale' : 'hover:-translate-y-2'} transition-all duration-300 w-full`}
+      className={`items-center w-full ${disabled ? 'opacity-20' : ''}`}
     >
-      <div
-        className={`w-20 h-20 sm:w-24 sm:h-24 rounded-[2rem] flex items-center justify-center text-white relative overflow-hidden transition-all duration-500 ${
-          !disabled 
-            ? `bg-gradient-to-br ${config.gradient} shadow-2xl ${config.shadow} active:scale-95` 
-            : 'bg-slate-800 border border-white/5'
-        }`}
-      >
-        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <div className="absolute -top-4 -right-4 w-12 h-12 bg-white/20 rounded-full blur-xl group-hover:scale-150 transition-transform"></div>
-        {config.icon}
-      </div>
-      <div className="text-center w-full px-0.5">
-        <p className="text-[9px] font-black text-white uppercase tracking-tighter leading-[1.1] min-h-[2.2rem] flex items-center justify-center">
-          {config.text}
-        </p>
-        <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mt-1">{config.subtext}</p>
-      </div>
-    </button>
+      {({ pressed }) => (
+        <>
+          <View
+            className="w-20 h-20 rounded-[2rem] overflow-hidden items-center justify-center"
+            style={{ transform: [{ scale: pressed && !disabled ? 0.95 : 1 }] }}
+          >
+            {disabled ? (
+              <View className="w-full h-full bg-slate-800 border border-white/5 items-center justify-center">
+                {config.icon}
+              </View>
+            ) : (
+              <LinearGradient
+                colors={config.gradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {config.icon}
+              </LinearGradient>
+            )}
+          </View>
+          <View className="w-full px-0.5 mt-4">
+            <Text
+              className="text-[9px] font-black text-white uppercase text-center"
+              style={{ letterSpacing: -0.5, lineHeight: 10 }}
+            >
+              {config.text}
+            </Text>
+            <Text
+              className="text-[7px] font-bold text-slate-500 uppercase text-center mt-1"
+              style={{ letterSpacing: 2 }}
+            >
+              {config.subtext}
+            </Text>
+          </View>
+        </>
+      )}
+    </Pressable>
   );
 };
