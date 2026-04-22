@@ -99,7 +99,7 @@ const Home: React.FC = () => {
 
   return (
     <Layout>
-      <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 80 }}>
+      <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 96 }}>
         {/* Streak Card */}
         {settings.showStreak && (
           <LinearGradient
