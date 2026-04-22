@@ -193,34 +193,40 @@ const Settings: React.FC = () => {
             </Text>
           </View>
           <View className="p-8 rounded-[3rem] bg-slate-900 border border-slate-800">
-            <View className="flex-row flex-wrap" style={{ gap: 16 }}>
-              {[
+            {[
+              [
                 { label: 'Señal', field: 'cue' as const },
                 { label: 'Anhelo', field: 'craving' as const },
+              ],
+              [
                 { label: 'Respuesta', field: 'response' as const },
                 { label: 'Recompensa', field: 'reward' as const },
-              ].map(({ label, field }) => (
-                <View key={field} style={{ width: '48%' }}>
-                  <Text
-                    className="text-[9px] font-black text-slate-400 uppercase mb-2 px-1"
-                    style={{ letterSpacing: 2 }}
-                  >
-                    {label}
-                  </Text>
-                  <TextInput
-                    value={settings.habitLoop[field]}
-                    onChangeText={(text) =>
-                      updateSettings({
-                        ...settings,
-                        habitLoop: { ...settings.habitLoop, [field]: text },
-                      })
-                    }
-                    className="bg-slate-800 rounded-2xl border border-slate-700 font-bold text-xs text-white"
-                    style={{ paddingHorizontal: 16, paddingVertical: 12 }}
-                  />
-                </View>
-              ))}
-            </View>
+              ],
+            ].map((row, rowIdx) => (
+              <View key={rowIdx} className="flex-row" style={{ gap: 12, marginBottom: rowIdx === 0 ? 16 : 0 }}>
+                {row.map(({ label, field }) => (
+                  <View key={field} style={{ flex: 1 }}>
+                    <Text
+                      className="text-[9px] font-black text-slate-400 uppercase mb-2 px-1"
+                      style={{ letterSpacing: 2 }}
+                    >
+                      {label}
+                    </Text>
+                    <TextInput
+                      value={settings.habitLoop[field]}
+                      onChangeText={(text) =>
+                        updateSettings({
+                          ...settings,
+                          habitLoop: { ...settings.habitLoop, [field]: text },
+                        })
+                      }
+                      className="bg-slate-800 rounded-2xl border border-slate-700 font-bold text-xs text-white"
+                      style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                    />
+                  </View>
+                ))}
+              </View>
+            ))}
             <Text
               className="text-[9px] text-slate-400 italic text-center mt-6 px-4"
               style={{ lineHeight: 14 }}

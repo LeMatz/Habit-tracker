@@ -18,9 +18,9 @@ type Step = {
   position: 'top' | 'right' | 'bottom' | 'left';
 };
 
-const CIRCLE_SIZE = 160;
-const BUBBLE_SIZE = 48;
-const LABEL_WIDTH = 120;
+const CIRCLE_SIZE = 140;
+const BUBBLE_SIZE = 44;
+const LABEL_WIDTH = 88;
 
 const HabitLoopView: React.FC<HabitLoopViewProps> = ({ loop, title = 'Ciclo del Hábito' }) => {
   if (!loop) return null;
@@ -78,13 +78,15 @@ const HabitLoopView: React.FC<HabitLoopViewProps> = ({ loop, title = 'Ciclo del 
   const labelStyle = (p: Step['position']) => {
     switch (p) {
       case 'top':
-        return { bottom: BUBBLE_SIZE + 6, left: -(LABEL_WIDTH - BUBBLE_SIZE) / 2, width: LABEL_WIDTH };
+        return { bottom: BUBBLE_SIZE + 4, left: -(LABEL_WIDTH - BUBBLE_SIZE) / 2, width: LABEL_WIDTH };
       case 'bottom':
-        return { top: BUBBLE_SIZE + 6, left: -(LABEL_WIDTH - BUBBLE_SIZE) / 2, width: LABEL_WIDTH };
+        return { top: BUBBLE_SIZE + 4, left: -(LABEL_WIDTH - BUBBLE_SIZE) / 2, width: LABEL_WIDTH };
       case 'right':
-        return { left: BUBBLE_SIZE + 6, top: BUBBLE_SIZE / 2 - 10, width: LABEL_WIDTH };
+        // Label on east bubble sits BELOW the bubble to stay inside the card
+        return { top: BUBBLE_SIZE + 4, left: -(LABEL_WIDTH - BUBBLE_SIZE) / 2, width: LABEL_WIDTH };
       case 'left':
-        return { right: BUBBLE_SIZE + 6, top: BUBBLE_SIZE / 2 - 10, width: LABEL_WIDTH };
+        // Label on west bubble sits ABOVE the bubble to stay inside the card
+        return { bottom: BUBBLE_SIZE + 4, left: -(LABEL_WIDTH - BUBBLE_SIZE) / 2, width: LABEL_WIDTH };
     }
   };
 

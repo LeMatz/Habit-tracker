@@ -182,20 +182,21 @@ const Tasks: React.FC = () => {
           className="bg-slate-900/90 border border-white/10 p-8"
           style={{ borderRadius: 48, marginBottom: 40 }}
         >
-          <View className="flex-row items-center justify-between mb-6">
-            <View className="flex-row items-center">
+          <View className="flex-row items-center justify-between mb-6" style={{ gap: 8 }}>
+            <View className="flex-row items-center flex-1">
               <View className="p-2 bg-indigo-500/10 rounded-xl mr-3">
                 <Microscope size={18} color="#818cf8" />
               </View>
               <Text
-                className="text-[11px] font-black uppercase text-indigo-400"
-                style={{ letterSpacing: 3, opacity: 0.8 }}
+                className="text-[11px] font-black uppercase text-indigo-400 flex-shrink"
+                numberOfLines={1}
+                style={{ letterSpacing: 2, opacity: 0.8 }}
               >
                 Base Científica
               </Text>
             </View>
-            <View className="px-3 py-1 bg-slate-800 rounded-full border border-white/5">
-              <Text className="text-[8px] font-black text-slate-400 uppercase" style={{ letterSpacing: 2 }}>
+            <View className="px-2.5 py-1 bg-slate-800 rounded-full border border-white/5">
+              <Text className="text-[8px] font-black text-slate-400 uppercase" style={{ letterSpacing: 1 }}>
                 Neuro-Insights
               </Text>
             </View>

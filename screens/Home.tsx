@@ -187,12 +187,12 @@ const Home: React.FC = () => {
               borderBottomRightRadius: isModeOpen ? 0 : 40,
             }}
           >
-            <View className="flex-row items-center">
-              <View className="p-3 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 mr-5">
+            <View className="flex-row items-center flex-1 mr-3">
+              <View className="p-3 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 mr-4">
                 {renderModeIcon(selectedMode.icon, 20)}
               </View>
-              <View>
-                <View className="flex-row items-center">
+              <View className="flex-1">
+                <View className="flex-row items-center flex-wrap">
                   <Text className="text-sm font-black text-white mr-2">{getModeName(selectedMode)}</Text>
                   <View className="bg-indigo-500/20 border border-indigo-500/30 px-2 py-0.5 rounded-full">
                     <Text className="text-indigo-400 text-[9px] font-black">{selectedMode.multiplier}x</Text>
@@ -201,6 +201,7 @@ const Home: React.FC = () => {
                 <Text
                   className="text-[10px] text-slate-300 font-bold uppercase mt-0.5"
                   numberOfLines={1}
+                  ellipsizeMode="tail"
                   style={{ letterSpacing: 1 }}
                 >
                   {selectedMode.description}
