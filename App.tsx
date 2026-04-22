@@ -7,6 +7,7 @@ import { View, Text } from 'react-native';
 import { Home, ListChecks, BarChart3, Gift, Settings as SettingsIcon } from 'lucide-react-native';
 import { HabitProvider } from './context/HabitContext';
 import HomeScreen from './screens/Home';
+import TasksScreen from './screens/Tasks';
 
 const Tab = createBottomTabNavigator();
 
@@ -39,10 +40,9 @@ export default function App() {
           />
           <Tab.Screen
             name="Tasks"
+            component={TasksScreen}
             options={{ tabBarIcon: ({ color, size }) => <ListChecks size={size} color={color} /> }}
-          >
-            {() => <Placeholder name="Tasks" />}
-          </Tab.Screen>
+          />
           <Tab.Screen
             name="Stats"
             options={{ tabBarIcon: ({ color, size }) => <BarChart3 size={size} color={color} /> }}
