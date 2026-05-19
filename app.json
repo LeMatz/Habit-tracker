@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Habit Tracker",
+    "name": "Sistema SHCE",
     "slug": "habit-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,7 +13,7 @@
       "supportsTablet": true,
       "requireFullScreen": true,
       "bundleIdentifier": "com.sistemashce.sistemashce",
-      "buildNumber": "4",
+      "buildNumber": "6",
       "config": {
         "usesNonExemptEncryption": false
       }
