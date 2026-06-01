@@ -1,26 +1,22 @@
 {
-  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true,
-    "jsx": "react-jsx",
-    "isolatedModules": true,
-    "resolveJsonModule": true,
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "allowJs": false,
     "skipLibCheck": true,
+    "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
+    "strict": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
     "moduleResolution": "Node",
-    "noEmit": true
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["node"]
   },
-  "include": [
-    "types.ts",
-    "constants.tsx",
-    "index.ts",
-    "App.tsx",
-    "components",
-    "screens",
-    "services",
-    "context",
-    "utils",
-    "nativewind-env.d.ts"
-  ]
+  "include": ["src", "types.ts", "constants.tsx", "index.tsx", "App.tsx", "components", "screens", "services", "context", "utils"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

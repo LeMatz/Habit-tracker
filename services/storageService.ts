@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { DailyCheckin, StreakData, RewardSystem, UserSettings, TreasureReward, PastHabit, TaskState, Tip } from '../types';
 
 const KEYS = {
@@ -9,102 +9,120 @@ const KEYS = {
   DICE_REWARDS: 'habit_dice_rewards',
   PAST_HABITS: 'habit_past_archive',
   TASK_STATE: 'habit_task_state',
-  TIPS: 'habit_tips',
-};
-
-async function saveData<T>(key: string, data: T): Promise<void> {
-  try {
-    await AsyncStorage.setItem(key, JSON.stringify(data));
-  } catch (error) {
-    console.error(`[Storage Error] Could not save ${key}:`, error);
-  }
-}
-
-async function getData<T>(key: string, defaultValue: T): Promise<T> {
-  try {
-    const raw = await AsyncStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : defaultValue;
-  } catch (error) {
-    console.error(`[Storage Error] Could not load ${key}:`, error);
-    return defaultValue;
-  }
-}
-
-const DEFAULT_SETTINGS: UserSettings = {
-  habitName: '',
-  isDarkMode: true,
-  notificationsEnabled: false,
-  soundsEnabled: true,
-  showStreak: true,
-  fontSize: 'normal',
-  reminderTime: '08:00',
-  gender: 'male',
-  emergencyHabit: 'EMD',
-  twoMinuteHabit: '2 minutos',
-  completeHabit: 'Hábito Completo',
-  habitLoop: {
-    cue: 'Señal',
-    craving: 'Anhelo',
-    response: 'Respuesta',
-    reward: 'Recompensa',
-  },
+  TIPS: 'habit_tips'
 };
 
 export const storageService = {
-  saveData,
-  getData,
+  saveData: (key: string, data: any) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (error) {
+      console.error(`[Storage Error] Could not save ${key}:`, error);
+    }
+  },
 
-  saveCheckins: (checkins: DailyCheckin[]) => saveData(KEYS.CHECKINS, checkins),
-  getCheckins: (): Promise<DailyCheckin[]> => getData(KEYS.CHECKINS, []),
+  getData: (key: string, defaultValue: any) => {
+    try {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : defaultValue;
+    } catch (error) {
+      console.error(`[Storage Error] Could not load ${key}:`, error);
+      return defaultValue;
+    }
+  },
 
-  saveStreak: (streak: StreakData) => saveData(KEYS.STREAK, streak),
-  getStreak: (): Promise<StreakData> =>
-    getData(KEYS.STREAK, {
-      currentStreak: 0,
-      longestStreak: 0,
-      totalCompletions: 0,
-      streakHistory: [],
-    }),
+  saveCheckins: (checkins: DailyCheckin[]) => storageService.saveData(KEYS.CHECKINS, checkins),
+  getCheckins: (): DailyCheckin[] => storageService.getData(KEYS.CHECKINS, []),
 
-  saveRewardSystem: (rewards: RewardSystem) => saveData(KEYS.REWARDS, rewards),
-  getRewardSystem: (): Promise<RewardSystem> =>
-    getData(KEYS.REWARDS, {
-      availablePoints: 0,
-      earnedToday: 0,
-      rewardsCatalog: [],
-      purchaseHistory: [],
-      streakProtectors: 0,
-    }),
+  saveStreak: (streak: StreakData) => storageService.saveData(KEYS.STREAK, streak),
+  getStreak: (): StreakData => storageService.getData(KEYS.STREAK, { 
+    currentStreak: 0, 
+    longestStreak: 0, 
+    totalCompletions: 0, 
+    streakHistory: [] 
+  }),
 
-  saveDiceRewards: (rewards: TreasureReward[]) => saveData(KEYS.DICE_REWARDS, rewards),
-  getDiceRewards: (): Promise<TreasureReward[]> => getData(KEYS.DICE_REWARDS, []),
+  saveRewardSystem: (rewards: RewardSystem) => storageService.saveData(KEYS.REWARDS, rewards),
+  getRewardSystem: (): RewardSystem => storageService.getData(KEYS.REWARDS, { 
+    availablePoints: 0, 
+    earnedToday: 0, 
+    rewardsCatalog: [], 
+    purchaseHistory: [],
+    streakProtectors: 0 
+  }),
 
-  saveSettings: (settings: UserSettings) => saveData(KEYS.SETTINGS, settings),
-  getSettings: async (): Promise<UserSettings> => {
-    const stored = await getData<Partial<UserSettings>>(KEYS.SETTINGS, DEFAULT_SETTINGS);
-    return {
-      ...DEFAULT_SETTINGS,
-      ...stored,
-      habitLoop: { ...DEFAULT_SETTINGS.habitLoop, ...(stored.habitLoop ?? {}) },
+  saveDiceRewards: (rewards: TreasureReward[]) => storageService.saveData(KEYS.DICE_REWARDS, rewards),
+  getDiceRewards: (): TreasureReward[] => storageService.getData(KEYS.DICE_REWARDS, []),
+
+  saveSettings: (settings: UserSettings) => storageService.saveData(KEYS.SETTINGS, settings),
+  getSettings: (): UserSettings => {
+    const defaults: UserSettings = { 
+      habitName: '', 
+      isDarkMode: true, 
+      notificationsEnabled: false,
+      soundsEnabled: true,
+      showStreak: true,
+      fontSize: 'normal',
+      reminderTime: '08:00',
+      gender: 'male',
+      emergencyHabit: 'EMD',
+      twoMinuteHabit: '2 minutos',
+      completeHabit: 'Hábito Completo',
+      habitLoop: {
+        cue: 'Señal',
+        craving: 'Anhelo',
+        response: 'Respuesta',
+        reward: 'Recompensa'
+      },
+      activeDays: [0, 1, 2, 3, 4, 5, 6],
+      habitType: 'calendar',
+      thresholdRate: 20,
+      showExecutionSpectrum: true,
+      chequeoSubtitle: 'Monitorear Estado',
+      ejecucionSubtitle: 'Mitigar / Resetear',
+      thresholdVariables: [
+        { id: 'var_sleep', name: 'Calidad de Sueño' },
+        { id: 'var_stress', name: 'Nivel de estrés' },
+        { id: 'var_exercise', name: 'Ejercicio diario' }
+      ],
+      definicionVentana: 'Ventana de disparador de oportunidad relevante para mi respuesta',
+      frecuenciaSemanasEsperada: 3,
+      opportunityTags: ['En Casa', 'En el Trabajo', 'En Tránsito', 'Social'],
+      emotionalTags: ['Calmado', 'Ansioso', 'Cansado', 'Neutral']
+    };
+    const stored = storageService.getData(KEYS.SETTINGS, defaults);
+    
+    // Migración única para asegurar que todos los usuarios comiencen en Modo Oscuro por defecto
+    if (!localStorage.getItem('theme_migrated_to_dark_v3')) {
+      stored.isDarkMode = true;
+      localStorage.setItem('theme_migrated_to_dark_v3', 'true');
+      storageService.saveData(KEYS.SETTINGS, stored);
+    }
+
+    return { 
+      ...defaults, 
+      ...stored, 
+      habitLoop: { ...defaults.habitLoop, ...(stored.habitLoop || {}) },
+      activeDays: stored.activeDays !== undefined ? stored.activeDays : defaults.activeDays,
+      thresholdVariables: stored.thresholdVariables ? stored.thresholdVariables : defaults.thresholdVariables,
+      definicionVentana: stored.definicionVentana !== undefined ? stored.definicionVentana : defaults.definicionVentana,
+      frecuenciaSemanasEsperada: stored.frecuenciaSemanasEsperada !== undefined ? stored.frecuenciaSemanasEsperada : defaults.frecuenciaSemanasEsperada,
+      opportunityTags: stored.opportunityTags !== undefined ? stored.opportunityTags : defaults.opportunityTags,
+      emotionalTags: stored.emotionalTags !== undefined ? stored.emotionalTags : defaults.emotionalTags
     };
   },
 
-  savePastHabits: (habits: PastHabit[]) => saveData(KEYS.PAST_HABITS, habits),
-  getPastHabits: (): Promise<PastHabit[]> => getData(KEYS.PAST_HABITS, []),
+  savePastHabits: (habits: PastHabit[]) => storageService.saveData(KEYS.PAST_HABITS, habits),
+  getPastHabits: (): PastHabit[] => storageService.getData(KEYS.PAST_HABITS, []),
 
-  saveTaskState: (state: TaskState) => saveData(KEYS.TASK_STATE, state),
-  getTaskState: (): Promise<TaskState> =>
-    getData(KEYS.TASK_STATE, {
-      currentTaskId: null,
-      lastAssignedDate: null,
-      isCompleted: false,
-      history: [],
-    }),
+  saveTaskState: (state: TaskState) => storageService.saveData(KEYS.TASK_STATE, state),
+  getTaskState: (): TaskState => storageService.getData(KEYS.TASK_STATE, {
+    currentTaskId: null,
+    lastAssignedDate: null,
+    isCompleted: false,
+    history: []
+  }),
 
-  saveTips: (tips: Tip[]) => saveData(KEYS.TIPS, tips),
-  getTips: (): Promise<Tip[]> => getData(KEYS.TIPS, []),
-
-  clearAll: async (): Promise<void> => {
-    await AsyncStorage.clear();
-  },
+  saveTips: (tips: Tip[]) => storageService.saveData(KEYS.TIPS, tips),
+  getTips: (): Tip[] => storageService.getData(KEYS.TIPS, [])
 };

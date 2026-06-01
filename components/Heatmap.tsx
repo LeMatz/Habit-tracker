@@ -1,5 +1,5 @@
+
 import React, { useMemo } from 'react';
-import { View, ScrollView } from 'react-native';
 import { DailyCheckin } from '../types';
 
 interface HeatmapProps {
@@ -7,40 +7,22 @@ interface HeatmapProps {
   endDate?: string;
 }
 
-type SlotKind = 'emergency' | 'twoMinutes' | 'complete' | 'missed' | 'empty';
-
-type Slot = { kind: SlotKind };
-
-const TOTAL_SLOTS = 84; // 12 weeks × 7 days
-const COLS = 12;
-const ROWS = 7;
-
-const colorFor = (kind: SlotKind): string => {
-  switch (kind) {
-    case 'emergency':
-      return '#f97316';
-    case 'twoMinutes':
-      return '#6366f1';
-    case 'complete':
-      return '#06b6d4';
-    case 'missed':
-      return '#ffffff';
-    case 'empty':
-      return '#0f172a';
-  }
-};
-
 const Heatmap: React.FC<HeatmapProps> = ({ checkins, endDate }) => {
-  const grid = useMemo(() => {
+  const totalSlots = 84; // 12 semanas
+  
+  const gridData = useMemo(() => {
+    // 1. Determinar la fecha de referencia local (UTC-3)
     const now = new Date();
-    const utcTime = now.getTime() + now.getTimezoneOffset() * 60000;
-    const offset = -3;
-    const localNow = new Date(utcTime + 3600000 * offset);
-    const todayStr = endDate ?? localNow.toISOString().split('T')[0];
-
+    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const offset = -3; 
+    const localNow = new Date(utcTime + (3600000 * offset));
+    const todayStr = localNow.toISOString().split('T')[0];
+    
+    // 2. Encontrar la fecha del primer registro
     const sortedCheckins = [...checkins].sort((a, b) => a.date.localeCompare(b.date));
     const firstCheckinDate = sortedCheckins.length > 0 ? sortedCheckins[0].date : null;
 
+    // 3. Calcular cuántos días han pasado desde el inicio hasta hoy
     let missedDaysCount = 0;
     if (firstCheckinDate) {
       const start = new Date(firstCheckinDate + 'T12:00:00');
@@ -50,69 +32,73 @@ const Heatmap: React.FC<HeatmapProps> = ({ checkins, endDate }) => {
       missedDaysCount = Math.max(0, totalDaysActive - checkins.length);
     }
 
-    const slots: Slot[] = [];
+    // 4. Preparar los estados de los 84 slots
+    const slots: { colorClass: string }[] = [];
 
-    checkins.forEach((c) => {
-      if (c.buttonType === 'emergency') slots.push({ kind: 'emergency' });
-      else if (c.buttonType === 'twoMinutes') slots.push({ kind: 'twoMinutes' });
-      else slots.push({ kind: 'complete' });
+    // Agregar los completados
+    checkins.forEach(checkin => {
+      let colorClass = '';
+      if (checkin.buttonType === 'emergency') {
+        colorClass = 'bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.6)] scale-100 border-transparent';
+      } else if (checkin.buttonType === 'twoMinutes') {
+        colorClass = 'bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.6)] scale-100 border-transparent';
+      } else {
+        colorClass = 'bg-cyan-500 shadow-[0_0_12px_rgba(6,182,212,0.6)] scale-100 border-transparent';
+      }
+      slots.push({ colorClass });
     });
 
-    const actualMissed = Math.min(missedDaysCount, TOTAL_SLOTS - slots.length);
-    for (let i = 0; i < actualMissed; i++) slots.push({ kind: 'missed' });
+    // Agregar los perdidos (Blanco)
+    const actualMissed = Math.min(missedDaysCount, totalSlots - slots.length);
+    for (let i = 0; i < actualMissed; i++) {
+      slots.push({ colorClass: 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.4)] scale-100 border-transparent rounded-[2px]' });
+    }
 
-    const remaining = TOTAL_SLOTS - slots.length;
-    for (let i = 0; i < remaining; i++) slots.push({ kind: 'empty' });
+    // Rellenar el resto con "Sin Registro" (Negro)
+    const remaining = totalSlots - slots.length;
+    for (let i = 0; i < remaining; i++) {
+      slots.push({ colorClass: 'bg-slate-900 border border-white/5 scale-[0.85] rounded-[2px]' });
+    }
 
-    // Fisher-Yates shuffle
+    // 5. Barajar aleatoriamente (Fisher-Yates)
+    // Usamos un generador de números aleatorios simple para que sea estable por render si los checkins no cambian
+    // Pero como está dentro de useMemo con [checkins], se mantendrá igual hasta que haya un nuevo checkin.
     for (let i = slots.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [slots[i], slots[j]] = [slots[j], slots[i]];
     }
 
-    const columns: Slot[][] = [];
-    for (let col = 0; col < COLS; col++) {
-      const column: Slot[] = [];
-      for (let row = 0; row < ROWS; row++) {
-        column.push(slots[col * ROWS + row]);
+    // 6. Convertir en rejilla de 12x7
+    const grid = [];
+    for (let col = 0; col < 12; col++) {
+      const column = [];
+      for (let row = 0; row < 7; row++) {
+        column.push(slots[col * 7 + row]);
       }
-      columns.push(column);
+      grid.push(column);
     }
 
-    return columns;
+    return grid;
   }, [checkins, endDate]);
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{
-        flexDirection: 'row',
-        paddingHorizontal: 24,
-        paddingVertical: 24,
-      }}
-      className="bg-slate-950/60 rounded-[2.5rem] border border-white/5"
-    >
-      {grid.map((column, wi) => (
-        <View key={wi} style={{ marginRight: wi < COLS - 1 ? 6 : 0 }}>
-          {column.map((slot, di) => (
-            <View
+    <div className="flex space-x-1.5 overflow-x-auto no-scrollbar p-6 bg-slate-950/60 rounded-[2.5rem] border border-white/5 shadow-inner justify-center mb-2">
+      {gridData.map((week, wi) => (
+        <div key={wi} className="flex flex-col space-y-1.5 shrink-0">
+          {week.map((day, di) => (
+            <div
               key={`${wi}-${di}`}
-              style={{
-                width: 16,
-                height: 16,
-                marginBottom: di < ROWS - 1 ? 6 : 0,
-                borderRadius: 2,
-                backgroundColor: colorFor(slot.kind),
-                borderWidth: slot.kind === 'empty' ? 1 : 0,
-                borderColor: 'rgba(255,255,255,0.05)',
-                transform: [{ scale: slot.kind === 'empty' ? 0.85 : 1 }],
+              className={`w-4 h-4 rounded-[2px] transition-all duration-1000 ease-out ${
+                day.colorClass
+              }`}
+              style={{ 
+                transitionDelay: `${(wi * 7 + di) * 5}ms` 
               }}
             />
           ))}
-        </View>
+        </div>
       ))}
-    </ScrollView>
+    </div>
   );
 };
 

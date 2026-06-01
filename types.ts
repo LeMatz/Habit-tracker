@@ -59,6 +59,56 @@ export interface UserSettings {
   twoMinuteHabit: string;
   completeHabit: string;
   habitLoop: HabitLoop;
+  activeDays?: number[]; // indices de 0 (Domingo) a 6 (Sábado) que representan los días comprometidos
+  habitType?: 'calendar' | 'threshold' | 'opportunity';
+  thresholdRate?: number;
+  showExecutionSpectrum?: boolean;
+  chequeoSubtitle?: string;
+  ejecucionSubtitle?: string;
+  thresholdVariables?: Array<{ id: string; name: string }>;
+  definicionVentana?: string;
+  frecuenciaSemanasEsperada?: number;
+  opportunityTags?: string[];
+  emotionalTags?: string[];
+}
+
+export type EstadoEventoOportunidad = 'ejecutada' | 'no_ejecutada' | 'condicion_externa' | 'automatico' | 'entrenamiento';
+
+export interface RegistroEventoOportunidad {
+  id: string;
+  date: string;
+  timestamp: string;
+  estado: EstadoEventoOportunidad;
+  contexto: string;
+  estadoEmocional?: string;
+  notas?: string;
+}
+
+export interface CicloHistorico {
+  ciclo: number;
+  dias: number;
+  fechaDisparo: string;
+  interrumpido: boolean;
+  factores?: Record<string, number>;
+}
+
+export interface IntervencionRegistrada {
+  timestamp: string;
+  momentPercent: number; // e.g. 10, 20, 30... 100
+  tipo: string;
+  efectividad: 'alta' | 'media' | 'baja';
+  nota?: string;
+}
+
+export interface RegistroDiarioUmbral {
+  date: string;
+  tipo: 'chequeo' | 'ejecución' | 'sin_registro';
+  porcentaje: number;
+  timestamp: string;
+  factores: Record<string, number>;
+  rate?: number; // tasa de acumulación en ese segmento
+  intervencion?: boolean;
+  espectro?: 'emd' | '2min' | 'complete';
 }
 
 export interface TreasureReward {
@@ -108,6 +158,15 @@ export interface PastHabit {
   avgWillpower?: string;
   checkinsSnapshot?: DailyCheckin[];
   habitLoop?: HabitLoop;
+  streakSnapshot?: StreakData;
+  settingsSnapshot?: {
+    habitName: string;
+    emergencyHabit: string;
+    twoMinuteHabit: string;
+    completeHabit: string;
+    habitLoop: HabitLoop;
+    activeDays?: number[];
+  };
 }
 
 export interface Tip {

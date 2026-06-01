@@ -1,60 +1,58 @@
-import React from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Home, ListChecks, BarChart3, Gift, Settings as SettingsIcon } from 'lucide-react-native';
-import { HabitProvider } from './context/HabitContext';
-import HomeScreen from './screens/Home';
-import TasksScreen from './screens/Tasks';
-import SettingsScreen from './screens/Settings';
-import StatsScreen from './screens/Stats';
-import GamificationScreen from './screens/Gamification';
+import React, { useState, useEffect } from 'react';
+import { HabitProvider, useHabits } from './context/HabitContext';
+import Layout from './components/Layout';
+import Home from './screens/Home';
+import Stats from './screens/Stats';
+import Gamification from './screens/Gamification';
+import Settings from './screens/Settings';
+import Tasks from './screens/Tasks';
 
-const Tab = createBottomTabNavigator();
+const AppContent: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('home');
+  const { settings } = useHabits();
 
-export default function App() {
+  // Sincronización de Modo Oscuro
+  useEffect(() => {
+    if (settings.isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [settings.isDarkMode]);
+
+  // Sincronización de Tamaño de Fuente
+  useEffect(() => {
+    if (settings.fontSize === 'large') {
+      document.documentElement.classList.add('font-large');
+    } else {
+      document.documentElement.classList.remove('font-large');
+    }
+  }, [settings.fontSize]);
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'home': return <Home />;
+      case 'tasks': return <Tasks />;
+      case 'stats': return <Stats />;
+      case 'rewards': return <Gamification />;
+      case 'settings': return <Settings />;
+      default: return <Home />;
+    }
+  };
+
   return (
-    <SafeAreaProvider>
-      <HabitProvider>
-        <NavigationContainer>
-          <StatusBar style="light" />
-        <Tab.Navigator
-          screenOptions={{
-            headerShown: false,
-            tabBarStyle: { backgroundColor: '#020617', borderTopColor: '#1e293b' },
-            tabBarActiveTintColor: '#06b6d4',
-            tabBarInactiveTintColor: '#64748b',
-          }}
-        >
-          <Tab.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{ tabBarIcon: ({ color, size }) => <Home size={size} color={color} /> }}
-          />
-          <Tab.Screen
-            name="Tasks"
-            component={TasksScreen}
-            options={{ tabBarIcon: ({ color, size }) => <ListChecks size={size} color={color} /> }}
-          />
-          <Tab.Screen
-            name="Stats"
-            component={StatsScreen}
-            options={{ tabBarIcon: ({ color, size }) => <BarChart3 size={size} color={color} /> }}
-          />
-          <Tab.Screen
-            name="Rewards"
-            component={GamificationScreen}
-            options={{ tabBarIcon: ({ color, size }) => <Gift size={size} color={color} /> }}
-          />
-          <Tab.Screen
-            name="Settings"
-            component={SettingsScreen}
-            options={{ tabBarIcon: ({ color, size }) => <SettingsIcon size={size} color={color} /> }}
-          />
-          </Tab.Navigator>
-        </NavigationContainer>
-      </HabitProvider>
-    </SafeAreaProvider>
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+      {renderContent()}
+    </Layout>
   );
-}
+};
+
+const App: React.FC = () => {
+  return (
+    <HabitProvider>
+      <AppContent />
+    </HabitProvider>
+  );
+};
+
+export default App;
