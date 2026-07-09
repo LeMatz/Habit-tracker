@@ -2,5 +2,4 @@
   "name": "Sistema SHCE V2",
   "description": "A comprehensive habit tracking application with streaks, gamification, and detailed progress analysis.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
