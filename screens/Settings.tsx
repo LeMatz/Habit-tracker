@@ -27,7 +27,8 @@ import {
   Layers,
   Target,
   Sliders,
-  Info
+  Info,
+  Bell
 } from 'lucide-react';
 
 const DAYS_OF_WEEK = [
@@ -41,7 +42,7 @@ const DAYS_OF_WEEK = [
 ];
 
 const Settings: React.FC = () => {
-  const { settings, updateSettings, requestNotificationPermission, requestStoragePermission, resetProgress, startNewHabit, diceRewards, updateDiceReward } = useHabits();
+  const { settings, updateSettings, requestNotificationPermission, requestStoragePermission, resetProgress, startNewHabit, diceRewards, updateDiceReward, sendTestNotification } = useHabits();
   const [isStorageEnabled, setIsStorageEnabled] = useState(false);
   const [showDiceConfig, setShowDiceConfig] = useState(false);
   const [showDaysInfo, setShowDaysInfo] = useState(false);
@@ -727,6 +728,75 @@ const Settings: React.FC = () => {
                   />
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Configuración de Notificaciones */}
+      <section className="space-y-5">
+        <div className="flex items-center space-x-2 px-3">
+           <Bell size={14} className="text-indigo-500" />
+           <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Notificaciones Diarias</h3>
+        </div>
+        <div className="p-8 rounded-[3rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-6 shadow-xl transition-colors">
+          <div 
+            onClick={async () => {
+              const currentVal = !settings.notificationsEnabled;
+              if (currentVal) {
+                const granted = await requestNotificationPermission();
+                if (!granted) {
+                  alert("No se pudieron activar las notificaciones porque el permiso fue denegado o no es soportado por el navegador.");
+                  return;
+                }
+              }
+              handleChange('notificationsEnabled', currentVal);
+            }}
+            className="flex items-center justify-between group cursor-pointer select-none"
+          >
+            <div className="flex items-center space-x-5">
+              <div className="p-3.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-2xl border border-indigo-500/10 transition-colors">
+                <Bell size={22} className="text-indigo-500" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-black tracking-tight text-slate-900 dark:text-white">Enviar Notificaciones</span>
+                <span className="text-[9px] text-slate-500 font-bold uppercase">Recordatorios de Misión</span>
+              </div>
+            </div>
+            <div 
+              className={`w-14 h-7 rounded-full relative transition-all duration-300 shrink-0 ${settings.notificationsEnabled ? 'bg-indigo-600 shadow-indigo-500/50' : 'bg-slate-300 dark:bg-slate-700'}`}
+            >
+              <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-lg transition-all duration-300 ${settings.notificationsEnabled ? 'left-8' : 'left-1'}`}></div>
+            </div>
+          </div>
+
+          {settings.notificationsEnabled && (
+            <div className="space-y-5 pt-4 border-t border-slate-100 dark:border-slate-800 animate-in fade-in duration-300">
+              <div className="space-y-3">
+                <label className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">Hora del Recordatorio</label>
+                <div className="flex items-center space-x-3 bg-slate-50 dark:bg-slate-800 rounded-3xl p-1 border border-slate-200 dark:border-slate-700">
+                  <span className="pl-5 text-slate-400 dark:text-slate-500"><Clock size={18} /></span>
+                  <input 
+                    type="time" 
+                    value={settings.reminderTime || '08:00'}
+                    onChange={(e) => handleChange('reminderTime', e.target.value)}
+                    className="flex-1 bg-transparent px-4 py-4 text-sm font-black text-slate-900 dark:text-white outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptics.selection();
+                    sendTestNotification();
+                  }}
+                  className="w-full py-4 bg-indigo-50 dark:bg-indigo-950/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest transition-all active:scale-95"
+                >
+                  Probar Notificación de Misión
+                </button>
+              </div>
             </div>
           )}
         </div>

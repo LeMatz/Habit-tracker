@@ -338,6 +338,53 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const canCheckin = useCallback(() => !hasCheckedInToday(), [hasCheckedInToday]);
 
+  // Efecto para verificar y enviar notificaciones locales
+  useEffect(() => {
+    if (!settings.notificationsEnabled) return;
+
+    const checkAndSendNotification = () => {
+      // Si ya hizo check-in hoy, no enviar nada
+      if (hasCheckedInToday()) return;
+
+      const now = new Date();
+      const currentHourStr = String(now.getHours()).padStart(2, '0');
+      const currentMinStr = String(now.getMinutes()).padStart(2, '0');
+      const currentTimeStr = `${currentHourStr}:${currentMinStr}`;
+
+      // Comprobar si coincide con la hora programada
+      if (currentTimeStr === settings.reminderTime) {
+        // Comprobar si ya enviamos notificación hoy
+        const lastSentDate = localStorage.getItem('habit_last_notification_date');
+        if (lastSentDate !== today) {
+          let message = "";
+          const habitType = settings.habitType || 'calendar';
+          if (habitType === 'calendar') {
+            message = `¡Hora de tu hábito diario! Demuestra que eres ${settings.habitName || 'quien dices ser'}`;
+          } else if (habitType === 'threshold') {
+            message = "¿Cuánto aumentó tu umbral hoy? ¿Es necesario bajar su nivel?";
+          } else if (habitType === 'opportunity') {
+            message = "¿Tuviste oportunidad de actuar diferente? Tomate unos minutos para entrenar";
+          }
+
+          if ("Notification" in window && Notification.permission === "granted") {
+            try {
+              new Notification("Sistema SHCE", { body: message });
+              localStorage.setItem('habit_last_notification_date', today);
+            } catch (e) {
+              console.error("Error al enviar notificación:", e);
+            }
+          }
+        }
+      }
+    };
+
+    // Verificar inmediatamente al cargar/activar y luego cada 30 segundos
+    checkAndSendNotification();
+    const interval = setInterval(checkAndSendNotification, 30000);
+
+    return () => clearInterval(interval);
+  }, [settings.notificationsEnabled, settings.reminderTime, settings.habitType, settings.habitName, hasCheckedInToday, today]);
+
   const addCheckin = (type: HabitButtonType, willpower: number, modeId: string, notes?: string) => {
     if (!canCheckin()) return false;
     
@@ -658,7 +705,32 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const requestStoragePermission = async () => true;
-  const sendTestNotification = () => {};
+  const sendTestNotification = () => {
+    if (!("Notification" in window)) {
+      alert("Tu navegador no soporta notificaciones.");
+      return;
+    }
+    if (Notification.permission !== "granted") {
+      alert("Por favor, habilita los permisos de notificación primero.");
+      return;
+    }
+    
+    let message = "";
+    const habitType = settings.habitType || 'calendar';
+    if (habitType === 'calendar') {
+      message = `¡Hora de tu hábito diario! Demuestra que eres ${settings.habitName || 'quien dices ser'}`;
+    } else if (habitType === 'threshold') {
+      message = "¿Cuánto aumentó tu umbral hoy? ¿Es necesario bajar su nivel?";
+    } else if (habitType === 'opportunity') {
+      message = "¿Tuviste oportunidad de actuar diferente? Tomate unos minutos para entrenar";
+    }
+
+    try {
+      new Notification("Prueba de Sistema SHCE", { body: message });
+    } catch (e) {
+      console.error("Error al enviar notificación de prueba:", e);
+    }
+  };
   
   const resetProgress = () => {
     isResetting.current = true;
