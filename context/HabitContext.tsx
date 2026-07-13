@@ -139,19 +139,20 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return stored.length > 0 ? stored : TIPS_POOL;
   });
 
-  const [umbralActual, setUmbralActual] = useState<number>(() => storageService.getData('habit_umbral_actual', 0));
+  const [umbralActual, setUmbralActual] = useState<number>(() => storageService.getUmbralActual());
   const [ciclosHistoricos, setCiclosHistoricos] = useState<CicloHistorico[]>(() => {
-    return storageService.getData('habit_ciclos_historicos', []);
+    return storageService.getCiclosHistoricos();
   });
-  const [intervencionesRegistradas, setIntervencionesRegistradas] = useState<IntervencionRegistrada[]>(() => storageService.getData('habit_intervenciones', []));
+  const [intervencionesRegistradas, setIntervencionesRegistradas] = useState<IntervencionRegistrada[]>(() => storageService.getIntervenciones());
   const [registrosDiarios, setRegistrosDiarios] = useState<RegistroDiarioUmbral[]>(() => {
-    return storageService.getData('habit_registros_diarios', []);
+    return storageService.getRegistrosDiarios();
   });
   const [registrosEventos, setRegistrosEventos] = useState<RegistroEventoOportunidad[]>(() => {
-    return storageService.getData('habit_registros_eventos', []);
+    return storageService.getRegistrosEventos();
   });
   
   const isResetting = useRef(false);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Lógica de Integridad de Racha (Protector de Racha)
   const verifyStreakIntegrity = useCallback((currentToday: string) => {
@@ -241,10 +242,13 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [streak.streakHistory, streak.currentStreak, rewards.streakProtectors, settings.activeDays]);
 
+  const verifyStreakIntegrityRef = useRef(verifyStreakIntegrity);
+  verifyStreakIntegrityRef.current = verifyStreakIntegrity;
+
   // Verificar racha al iniciar y cuando cambia el día
   useEffect(() => {
-    verifyStreakIntegrity(today);
-  }, [today, verifyStreakIntegrity]);
+    verifyStreakIntegrityRef.current(today);
+  }, [today]);
 
   useEffect(() => {
     const checkDate = () => {
@@ -252,7 +256,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (newToday !== today) {
         setToday(newToday);
         setTaskState(prev => ({ ...prev, isCompleted: false }));
-        verifyStreakIntegrity(newToday);
+        verifyStreakIntegrityRef.current(newToday);
       }
     };
 
@@ -266,7 +270,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       clearInterval(interval);
       window.removeEventListener('focus', checkDate);
     };
-  }, [today, verifyStreakIntegrity]);
+  }, [today]);
 
   // Manejo de Tareas Diarias con "Shuffle Bag" robusto
   useEffect(() => {
@@ -306,19 +310,26 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     if (isResetting.current) return;
-    storageService.saveCheckins(checkins);
-    storageService.saveStreak(streak);
-    storageService.saveRewardSystem(rewards);
-    storageService.saveDiceRewards(diceRewards);
-    storageService.savePastHabits(pastHabits);
-    storageService.saveTaskState(taskState);
-    storageService.saveTips(tips);
-    storageService.saveSettings(settings);
-    storageService.saveData('habit_umbral_actual', umbralActual);
-    storageService.saveData('habit_ciclos_historicos', ciclosHistoricos);
-    storageService.saveData('habit_intervenciones', intervencionesRegistradas);
-    storageService.saveData('habit_registros_diarios', registrosDiarios);
-    storageService.saveData('habit_registros_eventos', registrosEventos);
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      storageService.saveCheckins(checkins);
+      storageService.saveStreak(streak);
+      storageService.saveRewardSystem(rewards);
+      storageService.saveDiceRewards(diceRewards);
+      storageService.savePastHabits(pastHabits);
+      storageService.saveTaskState(taskState);
+      storageService.saveTips(tips);
+      storageService.saveSettings(settings);
+      storageService.saveUmbralActual(umbralActual);
+      storageService.saveCiclosHistoricos(ciclosHistoricos);
+      storageService.saveIntervenciones(intervencionesRegistradas);
+      storageService.saveRegistrosDiarios(registrosDiarios);
+      storageService.saveRegistrosEventos(registrosEventos);
+    }, 500);
+
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
   }, [checkins, streak, rewards, diceRewards, pastHabits, taskState, tips, settings, umbralActual, ciclosHistoricos, intervencionesRegistradas, registrosDiarios, registrosEventos]);
 
   const hasCheckedInToday = useCallback(() => {
@@ -534,7 +545,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       earnedToday: prev.earnedToday + points
     }));
 
-    if (!alreadyRegisteredToday && (estado === 'ejecutada' || estado === 'automatico' || estado === 'entrenamiento')) {
+    if (!alreadyRegisteredToday && (estado === 'ejecutada' || estado === 'automatico')) {
       if (canCheckin()) {
         addCheckin('complete', 5, 'normal', `Oportunidad: ${contexto}`);
       }
@@ -729,6 +740,12 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       currentTaskId: null,
       history: []
     }));
+
+    setUmbralActual(0);
+    setCiclosHistoricos([]);
+    setIntervencionesRegistradas([]);
+    setRegistrosDiarios([]);
+    setRegistrosEventos([]);
   };
 
   const resumePastHabit = (id: string) => {
@@ -839,6 +856,12 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       currentTaskId: null,
       history: []
     }));
+
+    setUmbralActual(0);
+    setCiclosHistoricos([]);
+    setIntervencionesRegistradas([]);
+    setRegistrosDiarios([]);
+    setRegistrosEventos([]);
   };
 
   return (

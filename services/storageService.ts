@@ -1,7 +1,7 @@
 
-import { DailyCheckin, StreakData, RewardSystem, UserSettings, TreasureReward, PastHabit, TaskState, Tip } from '../types';
+import { DailyCheckin, StreakData, RewardSystem, UserSettings, TreasureReward, PastHabit, TaskState, Tip, CicloHistorico, IntervencionRegistrada, RegistroDiarioUmbral, RegistroEventoOportunidad } from '../types';
 
-const KEYS = {
+export const KEYS = {
   CHECKINS: 'habit_checkins',
   STREAK: 'habit_streak',
   REWARDS: 'habit_rewards',
@@ -9,7 +9,12 @@ const KEYS = {
   DICE_REWARDS: 'habit_dice_rewards',
   PAST_HABITS: 'habit_past_archive',
   TASK_STATE: 'habit_task_state',
-  TIPS: 'habit_tips'
+  TIPS: 'habit_tips',
+  UMBRAL_ACTUAL: 'habit_umbral_actual',
+  CICLOS_HISTORICOS: 'habit_ciclos_historicos',
+  INTERVENCIONES: 'habit_intervenciones',
+  REGISTROS_DIARIOS: 'habit_registros_diarios',
+  REGISTROS_EVENTOS: 'habit_registros_eventos'
 };
 
 export const storageService = {
@@ -124,5 +129,20 @@ export const storageService = {
   }),
 
   saveTips: (tips: Tip[]) => storageService.saveData(KEYS.TIPS, tips),
-  getTips: (): Tip[] => storageService.getData(KEYS.TIPS, [])
+  getTips: (): Tip[] => storageService.getData(KEYS.TIPS, []),
+
+  saveUmbralActual: (umbral: number) => storageService.saveData(KEYS.UMBRAL_ACTUAL, umbral),
+  getUmbralActual: (): number => storageService.getData(KEYS.UMBRAL_ACTUAL, 0),
+
+  saveCiclosHistoricos: (ciclos: CicloHistorico[]) => storageService.saveData(KEYS.CICLOS_HISTORICOS, ciclos),
+  getCiclosHistoricos: (): CicloHistorico[] => storageService.getData(KEYS.CICLOS_HISTORICOS, []),
+
+  saveIntervenciones: (intervenciones: IntervencionRegistrada[]) => storageService.saveData(KEYS.INTERVENCIONES, intervenciones),
+  getIntervenciones: (): IntervencionRegistrada[] => storageService.getData(KEYS.INTERVENCIONES, []),
+
+  saveRegistrosDiarios: (registros: RegistroDiarioUmbral[]) => storageService.saveData(KEYS.REGISTROS_DIARIOS, registros),
+  getRegistrosDiarios: (): RegistroDiarioUmbral[] => storageService.getData(KEYS.REGISTROS_DIARIOS, []),
+
+  saveRegistrosEventos: (eventos: RegistroEventoOportunidad[]) => storageService.saveData(KEYS.REGISTROS_EVENTOS, eventos),
+  getRegistrosEventos: (): RegistroEventoOportunidad[] => storageService.getData(KEYS.REGISTROS_EVENTOS, [])
 };
