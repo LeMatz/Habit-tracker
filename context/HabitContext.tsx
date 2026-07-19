@@ -3,6 +3,25 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { DailyCheckin, StreakData, RewardSystem, HabitButtonType, Transaction, UserSettings, TreasureReward, DifficultyMode, PastHabit, TaskState, Tip, CicloHistorico, IntervencionRegistrada, RegistroDiarioUmbral, RegistroEventoOportunidad, EstadoEventoOportunidad } from '../types';
 import { storageService } from '../services/storageService';
 import { INITIAL_REWARDS, DICE_REWARDS, DIFFICULTY_MODES, TASKS_POOL, TIPS_POOL } from '../constants';
+import {
+  requestNotificationPermission as requestNotifPermission,
+  scheduleDailyReminder,
+  cancelDailyReminder,
+  sendImmediateNotification,
+  isNative,
+} from '../utils/notificationService';
+
+// Builds the reminder body text for the current habit type.
+const buildReminderMessage = (settings: UserSettings): string => {
+  const habitType = settings.habitType || 'calendar';
+  if (habitType === 'threshold') {
+    return '¿Cuánto aumentó tu umbral hoy? ¿Es necesario bajar su nivel?';
+  }
+  if (habitType === 'opportunity') {
+    return '¿Tuviste oportunidad de actuar diferente? Tomate unos minutos para entrenar';
+  }
+  return `¡Hora de tu hábito diario! Demuestra que eres ${settings.habitName || 'quien dices ser'}`;
+};
 
 interface HabitContextType {
   streak: StreakData;
@@ -338,8 +357,26 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const canCheckin = useCallback(() => !hasCheckedInToday(), [hasCheckedInToday]);
 
-  // Efecto para verificar y enviar notificaciones locales
+  // Efecto para programar el recordatorio diario.
+  // En apps nativas (Android/iOS) se agenda una notificación del sistema que
+  // se dispara aunque la app esté cerrada. En web se mantiene el sondeo cada
+  // 30s (solo funciona con la app abierta).
   useEffect(() => {
+    // --- Camino nativo: programar/cancelar notificación diaria recurrente ---
+    if (isNative()) {
+      if (settings.notificationsEnabled) {
+        scheduleDailyReminder(
+          settings.reminderTime,
+          'Sistema SHCE',
+          buildReminderMessage(settings),
+        ).catch((e) => console.error('Error al programar notificación:', e));
+      } else {
+        cancelDailyReminder().catch(() => {});
+      }
+      return;
+    }
+
+    // --- Camino web: sondeo mientras la app esté abierta ---
     if (!settings.notificationsEnabled) return;
 
     const checkAndSendNotification = () => {
@@ -356,19 +393,9 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Comprobar si ya enviamos notificación hoy
         const lastSentDate = localStorage.getItem('habit_last_notification_date');
         if (lastSentDate !== today) {
-          let message = "";
-          const habitType = settings.habitType || 'calendar';
-          if (habitType === 'calendar') {
-            message = `¡Hora de tu hábito diario! Demuestra que eres ${settings.habitName || 'quien dices ser'}`;
-          } else if (habitType === 'threshold') {
-            message = "¿Cuánto aumentó tu umbral hoy? ¿Es necesario bajar su nivel?";
-          } else if (habitType === 'opportunity') {
-            message = "¿Tuviste oportunidad de actuar diferente? Tomate unos minutos para entrenar";
-          }
-
           if ("Notification" in window && Notification.permission === "granted") {
             try {
-              new Notification("Sistema SHCE", { body: message });
+              new Notification("Sistema SHCE", { body: buildReminderMessage(settings) });
               localStorage.setItem('habit_last_notification_date', today);
             } catch (e) {
               console.error("Error al enviar notificación:", e);
@@ -699,34 +726,26 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const requestNotificationPermission = async () => {
-    if (!("Notification" in window)) return false;
-    const permission = await Notification.requestPermission();
-    return permission === "granted";
+    return requestNotifPermission();
   };
 
   const requestStoragePermission = async () => true;
-  const sendTestNotification = () => {
-    if (!("Notification" in window)) {
+  const sendTestNotification = async () => {
+    const granted = isNative()
+      ? true // permission already checked via requestNotificationPermission flow
+      : ("Notification" in window && Notification.permission === "granted");
+
+    if (!isNative() && !("Notification" in window)) {
       alert("Tu navegador no soporta notificaciones.");
       return;
     }
-    if (Notification.permission !== "granted") {
+    if (!isNative() && !granted) {
       alert("Por favor, habilita los permisos de notificación primero.");
       return;
     }
-    
-    let message = "";
-    const habitType = settings.habitType || 'calendar';
-    if (habitType === 'calendar') {
-      message = `¡Hora de tu hábito diario! Demuestra que eres ${settings.habitName || 'quien dices ser'}`;
-    } else if (habitType === 'threshold') {
-      message = "¿Cuánto aumentó tu umbral hoy? ¿Es necesario bajar su nivel?";
-    } else if (habitType === 'opportunity') {
-      message = "¿Tuviste oportunidad de actuar diferente? Tomate unos minutos para entrenar";
-    }
 
     try {
-      new Notification("Prueba de Sistema SHCE", { body: message });
+      await sendImmediateNotification("Prueba de Sistema SHCE", buildReminderMessage(settings));
     } catch (e) {
       console.error("Error al enviar notificación de prueba:", e);
     }

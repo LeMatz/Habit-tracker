@@ -7,17 +7,29 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "tsc --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "cap:sync": "npm run build && cap sync android",
+    "android:open": "cap open android",
+    "android:aab": "powershell -ExecutionPolicy Bypass -File ./build-android.ps1",
+    "android:apk": "powershell -ExecutionPolicy Bypass -File ./build-android.ps1 -Apk"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.4.2",
+    "@capacitor/local-notifications": "^8.2.1",
+    "@capacitor/status-bar": "^8.0.3",
+    "@fontsource/montserrat": "^5.2.8",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.462.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "lucide-react": "^0.462.0",
     "recharts": "^2.12.7",
-    "clsx": "^2.1.1",
     "tailwind-merge": "^2.5.2"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.4.2",
     "@types/node": "^22.13.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

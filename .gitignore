@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Signing secrets (belt-and-suspenders; also ignored in android/.gitignore)
+*.jks
+*.keystore
+keystore.properties
