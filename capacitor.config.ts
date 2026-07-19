@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.sistemashce.app',
+  appId: 'com.sistemashce.sistemashce',
   appName: 'Sistema SHCE',
   webDir: 'dist',
   backgroundColor: '#020617',

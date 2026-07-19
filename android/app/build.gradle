@@ -21,7 +21,7 @@ android {
         }
     }
     defaultConfig {
-        applicationId "com.sistemashce.app"
+        applicationId "com.sistemashce.sistemashce"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
